@@ -3,30 +3,51 @@ import Link from "next/link";
 import { formatRupiah, formatDate } from "@/lib/utils";
 import { headers } from "next/headers";
 
+import { supabaseAdmin } from "@/lib/supabase";
+
 async function getStats() {
-  const headersList = await headers();
-  const cookie = headersList.get('cookie') || '';
-  
-  const [menuRes, ordersRes] = await Promise.all([
-    fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/menu`, { headers: { cookie }, cache: 'no-store' }),
-    fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/orders`, { headers: { cookie }, cache: 'no-store' })
-  ]);
-  
-  const menu = menuRes.ok ? await menuRes.json() : [];
-  const orders = ordersRes.ok ? await ordersRes.json() : [];
-  
-  const today = new Date().toISOString().split('T')[0];
-  const todayOrders = orders.filter((o: any) => o.createdAt.startsWith(today));
-  const pendingOrders = orders.filter((o: any) => o.status === 'pending');
-  
-  return {
-    totalMenu: menu.length,
-    activeMenu: menu.filter((m: any) => m.isAvailable).length,
-    totalOrders: orders.length,
-    todayOrders: todayOrders.length,
-    pendingOrders: pendingOrders.length,
-    recentOrders: [...orders].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5)
-  };
+  try {
+    // Fetch direct from Supabase to avoid localhost issues in production
+    const [menuRes, ordersRes] = await Promise.all([
+      supabaseAdmin.from('menu').select('*'),
+      supabaseAdmin.from('orders').select('*').order('created_at', { ascending: false })
+    ]);
+    
+    if (menuRes.error) throw menuRes.error;
+    if (ordersRes.error) throw ordersRes.error;
+
+    const menu = menuRes.data || [];
+    const orders = (ordersRes.data || []).map(o => ({
+      id: o.id,
+      customerName: o.customer_name,
+      totalPrice: o.total_price,
+      status: o.status,
+      createdAt: o.created_at
+    }));
+    
+    const today = new Date().toISOString().split('T')[0];
+    const todayOrders = orders.filter((o: any) => o.createdAt.startsWith(today));
+    const pendingOrders = orders.filter((o: any) => o.status === 'pending');
+    
+    return {
+      totalMenu: menu.length,
+      activeMenu: menu.filter((m: any) => m.is_available).length,
+      totalOrders: orders.length,
+      todayOrders: todayOrders.length,
+      pendingOrders: pendingOrders.length,
+      recentOrders: orders.slice(0, 5)
+    };
+  } catch (error) {
+    console.error('getStats error:', error);
+    return {
+      totalMenu: 0,
+      activeMenu: 0,
+      totalOrders: 0,
+      todayOrders: 0,
+      pendingOrders: 0,
+      recentOrders: []
+    };
+  }
 }
 
 export default async function AdminDashboard() {

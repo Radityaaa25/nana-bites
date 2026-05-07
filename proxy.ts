@@ -3,23 +3,28 @@ import type { NextRequest } from 'next/server';
 
 // The function MUST be named "proxy" in Next.js 16+
 export function proxy(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  try {
+    const pathname = request.nextUrl.pathname;
 
-  if (pathname.startsWith('/admin')) {
-    // Always allow the login page
-    if (pathname === '/admin/login') {
-      return NextResponse.next();
+    if (pathname.startsWith('/admin')) {
+      // Always allow the login page
+      if (pathname === '/admin/login') {
+        return NextResponse.next();
+      }
+
+      const session = request.cookies.get('admin_session')?.value;
+
+      if (!session) {
+        const loginUrl = new URL('/admin/login', request.url);
+        return NextResponse.redirect(loginUrl);
+      }
     }
 
-    const session = request.cookies.get('admin_session');
-
-    if (!session || !session.value) {
-      const loginUrl = new URL('/admin/login', request.url);
-      return NextResponse.redirect(loginUrl);
-    }
+    return NextResponse.next();
+  } catch (error) {
+    console.error('Middleware Error:', error);
+    return NextResponse.redirect(new URL('/admin/login', request.url));
   }
-
-  return NextResponse.next();
 }
 
 export const config = {

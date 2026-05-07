@@ -1,17 +1,32 @@
 import MenuTableClient from "@/components/admin/MenuTableClient";
 import { headers } from "next/headers";
 
+import { supabaseAdmin } from "@/lib/supabase";
+
 async function getMenu() {
-  const headersList = await headers();
-  const cookie = headersList.get('cookie') || '';
-  
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/menu`, {
-    headers: { cookie },
-    cache: 'no-store'
-  });
-  
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('menu')
+      .select('*')
+      .order('created_at', { ascending: false });
+      
+    if (error) throw error;
+
+    return (data || []).map(item => ({
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      image: item.image,
+      isBestSeller: item.is_best_seller,
+      isAvailable: item.is_available,
+      isComingSoon: item.is_coming_soon,
+      createdAt: item.created_at
+    }));
+  } catch (error) {
+    console.error('getMenu error:', error);
+    return [];
+  }
 }
 
 export default async function AdminMenuPage() {
