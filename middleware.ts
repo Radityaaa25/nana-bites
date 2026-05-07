@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// The function MUST be named "proxy" in Next.js 16+
-export function proxy(request: NextRequest) {
+// Standard Next.js middleware to protect admin routes
+export function middleware(request: NextRequest) {
   try {
     const pathname = request.nextUrl.pathname;
 

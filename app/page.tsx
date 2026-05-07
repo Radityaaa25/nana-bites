@@ -1,14 +1,27 @@
 import LandingClient from "@/components/customer/LandingClient";
 
+import { supabase } from "@/lib/supabase";
+
 async function getMenu() {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/menu`,
-      { cache: "no-store" }
-    );
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
+    const { data } = await supabase
+      .from('menu')
+      .select('*')
+      .order('created_at', { ascending: false });
+      
+    return (data || []).map(item => ({
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      image: item.image,
+      isBestSeller: item.is_best_seller,
+      isAvailable: item.is_available,
+      isComingSoon: item.is_coming_soon,
+      createdAt: item.created_at
+    }));
+  } catch (error) {
+    console.error('getMenu error:', error);
     return [];
   }
 }
