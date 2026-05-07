@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #F472B6;
+  --color-primary-dark: #BE185D;
+  --color-soft-bg: #FDF2F8;
+  --color-white-card: #FFFFFF;
+  --color-text-dark: #1F1F1F;
+  --color-text-muted: #9CA3AF;
+  --color-accent: #FBCFE8;
+  --color-success: #86EFAC;
+  --color-warning: #FDE68A;
+  --color-danger: #FCA5A5;
+
+  --shadow-pink: 0 10px 15px -3px rgba(244, 114, 182, 0.3), 0 4px 6px -4px rgba(244, 114, 182, 0.3);
+
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+}
+
+@layer base {
+  :root {
+    --background: #FDF2F8;
+    --foreground: #1F1F1F;
+  }
+
+  html, body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body), sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading), serif;
+  }
+
+  /* font-heading → Cormorant Garamond */
+  .font-heading {
+    font-family: var(--font-heading), serif;
+  }
+
+  /* font-playfair → Playfair Display (navbar logo, admin branding) */
+  .font-playfair {
+    font-family: var(--font-playfair), serif;
+  }
+
+  /* font-poppins alias → DM Sans */
+  .font-poppins {
+    font-family: var(--font-body), sans-serif;
+  }
+
+  /* font-body alias */
+  .font-body {
+    font-family: var(--font-body), sans-serif;
+  }
+
+  .glassmorphism {
+    @apply bg-white/70 backdrop-blur-md border border-white/30;
+  }
+
+  .shadow-pink {
+    box-shadow: var(--shadow-pink);
+  }
+}

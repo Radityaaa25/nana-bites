@@ -1,0 +1,6 @@
+[
+  { "id": "1", "name": "Pisang Coklat (Piscok)", "description": "Pisang manis dibalut kulit lumpia crispy dengan coklat leleh di dalam", "price": 3000, "image": "", "isBestSeller": true, "isAvailable": true, "createdAt": "2024-05-01T00:00:00.000Z" },
+  { "id": "2", "name": "Cheese Roll", "description": "Kulit lumpia renyah isi keju leleh yang gurih dan bikin nagih", "price": 4000, "image": "", "isBestSeller": true, "isAvailable": true, "createdAt": "2024-05-01T00:00:00.000Z" },
+  { "id": "3", "name": "Cireng Isi", "description": "Cireng kenyal dengan isian bumbu rujak pedas manis", "price": 3500, "image": "", "isBestSeller": false, "isAvailable": true, "createdAt": "2024-05-01T00:00:00.000Z" },
+  { "id": "4", "name": "Tahu Crispy", "description": "Tahu goreng crispy dengan bumbu tabur spesial", "price": 2500, "image": "", "isBestSeller": false, "isAvailable": true, "createdAt": "2024-05-01T00:00:00.000Z" }
+]
