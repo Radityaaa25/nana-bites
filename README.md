@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍱 Nana Bites — Jajanan Kekinian Premium
 
-## Getting Started
+Nana Bites adalah aplikasi web katalog menu dan pemesanan jajanan modern yang dibangun dengan **Next.js 16**, **TypeScript**, **Tailwind CSS**, dan **Supabase**. Didesain dengan estetika *Modern, Elegant, & Cute* untuk memberikan pengalaman belanja yang premium bagi pelanggan.
 
-First, run the development server:
+## ✨ Fitur Utama
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **🎨 Desain Premium**: Antarmuka modern dengan tipografi mewah (Cormorant Garamond & DM Sans) serta animasi halus menggunakan **Framer Motion**.
+- **📱 Responsive & Interactive**: Optimal di semua perangkat dengan fitur *Product Detail Modal* dan *Cart System*.
+- **🛍️ Alur Pesan WhatsApp**: Integrasi otomatis yang merangkum pesanan dan mengirimkannya langsung ke WhatsApp penjual.
+- **⚡ Real-time Menu Management**: Dashboard Admin lengkap untuk mengatur stok, harga, gambar, label (Best Seller/Coming Soon), dan status ketersediaan secara real-time.
+- **🗄️ Supabase Integration**: Database PostgreSQL yang handal untuk menyimpan data menu dan riwayat pesanan.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Animations**: Framer Motion
+- **Database**: Supabase (PostgreSQL)
+- **Icons**: Lucide React
+- **Toast**: Sonner
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Persiapan Lokal
 
-## Learn More
+1. **Clone Repository**
+   ```bash
+   git clone https://github.com/Radityaaa25/nana-bites.git
+   cd nana-bites
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Konfigurasi Environment**
+   Buat file `.env.local` dan lengkapi variabel berikut:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   ADMIN_PASSWORD=your_admin_password
+   NEXT_PUBLIC_WA_NUMBER=your_whatsapp_number (cth: 628xxx)
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Jalankan Development Server**
+   ```bash
+   npm run dev
+   ```
 
-## Deploy on Vercel
+## 📂 Struktur Proyek
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `/app`: Rute aplikasi, API, dan halaman utama.
+- `/components`: Komponen UI yang reusable (Admin & Customer).
+- `/lib`: Utilitas, konfigurasi Supabase, dan state management (Zustand).
+- `/public`: Aset gambar dan logo.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+Made with 🩷 by [Nana Bites Team](https://github.com/Radityaaa25/nana-bites)
