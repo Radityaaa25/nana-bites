@@ -19,21 +19,19 @@ export default function FloatingNavbar() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
-    <motion.nav
-      initial={{ y: -100, x: "-50%", opacity: 0 }}
-      animate={{ y: 0, x: "-50%", opacity: 1 }}
-      transition={{ type: "spring", stiffness: 260, damping: 20 }}
+    <nav
       className={cn(
-        "fixed top-4 left-1/2 z-50 flex w-[90%] max-w-2xl items-center justify-between rounded-full border border-pink-100 px-6 py-3 shadow-lg transition-all duration-300",
-        scrolled ? "bg-white/90 backdrop-blur-xl" : "bg-white/60 backdrop-blur-md"
+        "fixed top-4 left-1/2 -translate-x-1/2 z-50 flex w-[90%] max-w-2xl items-center justify-between rounded-full border border-pink-100 px-6 py-3 shadow-lg transition-all duration-300",
+        scrolled
+          ? "bg-white/90 backdrop-blur-xl"
+          : "bg-white/60 backdrop-blur-md",
       )}
-      style={{ willChange: "transform, opacity", transform: "translateX(-50%) translateZ(0)" }}
-    >
+      style={{ willChange: "transform, opacity" }}>
       <Link href="/" className="flex items-center">
         <Image
           src="/Logo.png"
@@ -46,14 +44,17 @@ export default function FloatingNavbar() {
       </Link>
 
       <div className="hidden md:flex gap-6 font-medium text-pink-900/70">
-        <a href="#menu" className="hover:text-pink-600 transition-colors">Menu</a>
-        <a href="#cara-pesan" className="hover:text-pink-600 transition-colors">Cara Pesan</a>
+        <a href="#menu" className="hover:text-pink-600 transition-colors">
+          Menu
+        </a>
+        <a href="#cara-pesan" className="hover:text-pink-600 transition-colors">
+          Cara Pesan
+        </a>
       </div>
 
       <button
         onClick={toggleCart}
-        className="relative flex items-center justify-center rounded-full bg-pink-100 p-2 text-pink-700 hover:bg-pink-200 transition-colors"
-      >
+        className="relative flex items-center justify-center rounded-full bg-pink-100 p-2 text-pink-700 hover:bg-pink-200 transition-colors">
         <ShoppingCart className="h-5 w-5" />
         {mounted && cartCount > 0 && (
           <motion.span
@@ -61,12 +62,11 @@ export default function FloatingNavbar() {
             animate={{ scale: 1 }}
             key={cartCount}
             className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white"
-            style={{ willChange: "transform" }}
-          >
+            style={{ willChange: "transform" }}>
             {cartCount}
           </motion.span>
         )}
       </button>
-    </motion.nav>
+    </nav>
   );
 }

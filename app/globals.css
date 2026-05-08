@@ -1,18 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #F472B6;
-  --color-primary-dark: #BE185D;
-  --color-soft-bg: #FDF2F8;
-  --color-white-card: #FFFFFF;
-  --color-text-dark: #1F1F1F;
-  --color-text-muted: #9CA3AF;
-  --color-accent: #FBCFE8;
-  --color-success: #86EFAC;
-  --color-warning: #FDE68A;
-  --color-danger: #FCA5A5;
+  --color-primary: #f472b6;
+  --color-primary-dark: #be185d;
+  --color-soft-bg: #fdf2f8;
+  --color-white-card: #ffffff;
+  --color-text-dark: #1f1f1f;
+  --color-text-muted: #9ca3af;
+  --color-accent: #fbcfe8;
+  --color-success: #86efac;
+  --color-warning: #fde68a;
+  --color-danger: #fca5a5;
 
-  --shadow-pink: 0 10px 15px -3px rgba(244, 114, 182, 0.3), 0 4px 6px -4px rgba(244, 114, 182, 0.3);
+  --shadow-pink:
+    0 10px 15px -3px rgba(244, 114, 182, 0.3),
+    0 4px 6px -4px rgba(244, 114, 182, 0.3);
 
   --font-heading: var(--font-heading);
   --font-body: var(--font-body);
@@ -20,17 +22,34 @@
 
 @layer base {
   :root {
-    --background: #FDF2F8;
-    --foreground: #1F1F1F;
+    --background: #fdf2f8;
+    --foreground: #1f1f1f;
   }
 
-  html, body {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  html,
+  body {
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-body), sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-heading), serif;
   }
 
