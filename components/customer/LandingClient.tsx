@@ -1,7 +1,12 @@
 "use client";
 
-import { motion, useInView, type Variants, AnimatePresence } from "framer-motion";
-import { useRef, useState } from "react";
+import {
+  motion,
+  useInView,
+  type Variants,
+  AnimatePresence,
+} from "framer-motion";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import ProductCard from "./ProductCard";
 import ProductDetailModal from "./ProductDetailModal";
@@ -45,8 +50,7 @@ function AnimatedSection({
       animate={isInView ? "visible" : "hidden"}
       variants={stagger}
       className={className}
-      style={{ willChange: "transform, opacity" }}
-    >
+      style={{ willChange: "transform, opacity" }}>
       {children}
     </motion.div>
   );
@@ -66,12 +70,13 @@ function StepCard({
     <motion.div
       variants={fadeUp}
       className="flex flex-col items-center text-center p-6 rounded-3xl bg-pink-50/50 border border-pink-100 hover:border-pink-200 hover:bg-pink-50 transition-colors"
-      style={{ transform: "translateZ(0)", willChange: "transform, opacity" }}
-    >
+      style={{ transform: "translateZ(0)", willChange: "transform, opacity" }}>
       <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-3xl mb-4">
         {emoji}
       </div>
-      <h3 className="font-heading font-bold text-pink-900 text-xl mb-2">{title}</h3>
+      <h3 className="font-heading font-bold text-pink-900 text-xl mb-2">
+        {title}
+      </h3>
       <p className="text-pink-700/70 text-sm leading-relaxed">{desc}</p>
     </motion.div>
   );
@@ -84,6 +89,11 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
   const menuRef = useRef(null);
   const menuInView = useInView(menuRef, { once: true, margin: "-60px" });
 
+  // Reset scroll to top on component mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <>
       <FloatingNavbar />
@@ -94,43 +104,62 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8, duration: 0.5, ease: "easeOut" as const }}
         className="fixed top-[72px] left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-xl"
-        style={{ willChange: "transform, opacity", transform: "translateZ(0)" }}
-      >
-        
-      </motion.div>
+        style={{
+          willChange: "transform, opacity",
+          transform: "translateZ(0)",
+        }}></motion.div>
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-pink-50 via-white to-pink-100 pt-24">
         {/* Animated blobs */}
         <motion.div
           animate={{ scale: [1, 1.15, 1], x: [0, 20, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" as const }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut" as const,
+          }}
           className="absolute top-20 left-10 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-25 pointer-events-none"
         />
         <motion.div
           animate={{ scale: [1, 1.2, 1], y: [0, -30, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" as const, delay: 2 }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut" as const,
+            delay: 2,
+          }}
           className="absolute top-40 right-10 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-25 pointer-events-none"
         />
         <motion.div
           animate={{ scale: [1, 1.1, 1], x: [0, -20, 0] }}
-          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" as const, delay: 4 }}
+          transition={{
+            duration: 9,
+            repeat: Infinity,
+            ease: "easeInOut" as const,
+            delay: 4,
+          }}
           className="absolute -bottom-8 left-40 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 pointer-events-none"
         />
 
         <div className="container px-4 mx-auto relative z-10 text-center max-w-3xl">
-          <motion.div initial="hidden" animate="visible" variants={stagger} style={{ transform: "translateZ(0)", willChange: "transform, opacity" }}>
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={stagger}
+            style={{
+              transform: "translateZ(0)",
+              willChange: "transform, opacity",
+            }}>
             <motion.p
               variants={fadeUp}
-              className="text-pink-500 font-semibold text-sm tracking-widest uppercase mb-4"
-            >
+              className="text-pink-500 font-semibold text-sm tracking-widest uppercase mb-4">
               🍫 Jajanan Kekinian Nana Bites
             </motion.p>
 
             <motion.h1
               variants={fadeUp}
-              className="font-heading text-5xl md:text-7xl font-bold text-pink-900 leading-tight mb-6"
-            >
+              className="font-heading text-5xl md:text-7xl font-bold text-pink-900 leading-tight mb-6">
               Cemilan Enak,
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-pink-700">
@@ -140,23 +169,20 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
 
             <motion.p
               variants={fadeUp}
-              className="text-lg md:text-xl text-pink-700/70 mb-10 font-body leading-relaxed"
-            >
+              className="text-lg md:text-xl text-pink-700/70 mb-10 font-body leading-relaxed">
               Jajanan manis &amp; gurih spesial buat nemenin waktu santai kamu.
               Yuk pesan sekarang sebelum kehabisan! ✨
             </motion.p>
 
             <motion.div
               variants={fadeUp}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
-            >
+              className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <motion.a
                 href="#menu"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-pink-500 text-white font-bold text-lg shadow-pink hover:bg-pink-600 transition-colors"
-                style={{ willChange: "transform" }}
-              >
+                style={{ willChange: "transform" }}>
                 Lihat Menu 🍫
               </motion.a>
               <motion.a
@@ -164,8 +190,7 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-pink-600 font-bold text-lg shadow-sm border border-pink-100 hover:bg-pink-50 transition-colors"
-                style={{ willChange: "transform" }}
-              >
+                style={{ willChange: "transform" }}>
                 Cara Pesan
               </motion.a>
             </motion.div>
@@ -176,8 +201,7 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
         <motion.div
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
-        >
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
           <span className="text-xs font-medium text-pink-400">scroll</span>
           <div className="w-0.5 h-6 bg-gradient-to-b from-pink-300 to-transparent rounded-full" />
         </motion.div>
@@ -197,7 +221,9 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
               <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-2 mt-2.5 rounded-full">
                 <span>📦</span>
                 <span className="text-amber-800">
-                  <span className="font-bold">Pre-Order</span> — Pesanan diproses &amp; siap diambil besok atau sesuai jadwal. Konfirmasi via WhatsApp ya! 🙏
+                  <span className="font-bold">Pre-Order</span> — Pesanan
+                  diproses &amp; siap diambil besok atau sesuai jadwal.
+                  Konfirmasi via WhatsApp ya! 🙏
                 </span>
               </div>
             </motion.div>
@@ -235,12 +261,15 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
                 Menu Pilihan 🍱
               </h2>
               <p className="text-pink-600/80 text-lg mb-4">
-                Awas ngiler lihat yang manis-manis! Klik menu untuk lihat detail.
+                Awas ngiler lihat yang manis-manis! Klik menu untuk lihat
+                detail.
               </p>
               <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-2 rounded-full">
                 <span>📦</span>
                 <span className="text-amber-800">
-                  <span className="font-bold">Pre-Order</span> — Pesanan diproses &amp; siap diambil besok atau sesuai jadwal. Konfirmasi via WhatsApp ya! 🙏
+                  <span className="font-bold">Pre-Order</span> — Pesanan
+                  diproses &amp; siap diambil besok atau sesuai jadwal.
+                  Konfirmasi via WhatsApp ya! 🙏
                 </span>
               </div>
             </motion.div>
@@ -251,9 +280,8 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
             initial="hidden"
             animate={menuInView ? "visible" : "hidden"}
             variants={cardStagger}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            style={{ willChange: "transform, opacity" }}
-          >
+            className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+            style={{ willChange: "transform, opacity" }}>
             {menuItems.map((item: any) => (
               <ProductCard
                 key={item.id}
@@ -267,8 +295,7 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-20"
-            >
+              className="text-center py-20">
               <p className="text-5xl mb-4">🍱</p>
               <p className="font-heading text-xl text-pink-400">
                 Menu sedang disiapkan, ditunggu ya!
@@ -292,7 +319,8 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
                 className="h-10 w-auto object-contain brightness-105"
               />
               <p className="text-pink-400 text-sm font-medium tracking-tight md:mt-2.5 ml-2 -mt-2">
-                Cemilan enak, harga bersahabat <span className="text-pink-500">🩷</span>
+                Cemilan enak, harga bersahabat{" "}
+                <span className="text-pink-500">🩷</span>
               </p>
             </div>
 
@@ -302,8 +330,7 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
                 href="https://instagram.com/na_nyemill"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 px-6 py-3 rounded-full border border-pink-100 bg-pink-50/50 hover:bg-pink-100/70 hover:border-pink-200 hover:shadow-sm transition-all duration-300 group"
-              >
+                className="flex items-center gap-3 px-6 py-3 rounded-full border border-pink-100 bg-pink-50/50 hover:bg-pink-100/70 hover:border-pink-200 hover:shadow-sm transition-all duration-300 group">
                 <div className="p-1.5 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform duration-300">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -313,8 +340,7 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="w-4 h-4 text-pink-500"
-                  >
+                    className="w-4 h-4 text-pink-500">
                     <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
                     <circle cx="12" cy="12" r="4" />
                     <circle cx="17.5" cy="6.5" r="0.01" />
@@ -332,7 +358,8 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
                 Made with 🩷
               </p>
               <p className="text-pink-300 text-[10px] font-bold">
-                &copy; {new Date().getFullYear()} Nana Bites. All Rights Reserved.
+                &copy; {new Date().getFullYear()} Nana Bites. All Rights
+                Reserved.
               </p>
             </div>
           </div>
@@ -342,10 +369,10 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
       {/* Modals & Drawer */}
       <AnimatePresence mode="wait">
         {selectedItem && (
-          <ProductDetailModal 
+          <ProductDetailModal
             key="product-detail"
-            item={selectedItem} 
-            onClose={() => setSelectedItem(null)} 
+            item={selectedItem}
+            onClose={() => setSelectedItem(null)}
           />
         )}
       </AnimatePresence>

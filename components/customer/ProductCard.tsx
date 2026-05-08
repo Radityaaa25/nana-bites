@@ -50,16 +50,25 @@ export default function ProductCard({ item, onOpenDetail }: Props) {
     <motion.div
       variants={{
         hidden: { opacity: 0, y: 32 },
-        visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 180, damping: 20 } },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: { type: "spring", stiffness: 180, damping: 20 },
+        },
       }}
-      whileHover={isDisabled ? {} : { y: -4, boxShadow: "0 20px 40px -8px rgba(244,114,182,0.3)" }}
+      whileHover={
+        isDisabled
+          ? {}
+          : { y: -4, boxShadow: "0 20px 40px -8px rgba(244,114,182,0.3)" }
+      }
       whileTap={isDisabled ? {} : { scale: 0.98 }}
       onClick={() => onOpenDetail(item)}
       className={`group relative overflow-hidden rounded-2xl border bg-white cursor-pointer transition-shadow ${
-        isDisabled ? "border-gray-200 opacity-60" : "border-pink-100 hover:border-pink-200"
+        isDisabled
+          ? "border-gray-200 opacity-60"
+          : "border-pink-100 hover:border-pink-200"
       } ${!item.isAvailable && !item.isComingSoon ? "grayscale" : ""}`}
-      style={{ willChange: "transform, opacity", transform: "translateZ(0)" }}
-    >
+      style={{ willChange: "transform, opacity", transform: "translateZ(0)" }}>
       {/* Image */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-pink-50">
         <Image
@@ -95,7 +104,9 @@ export default function ProductCard({ item, onOpenDetail }: Props) {
         {/* Habis overlay */}
         {!item.isAvailable && !item.isComingSoon && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <span className="bg-gray-800 text-white font-bold px-4 py-2 rounded-full">Habis</span>
+            <span className="bg-gray-800 text-white font-bold px-4 py-2 rounded-full">
+              Habis
+            </span>
           </div>
         )}
 
@@ -127,19 +138,18 @@ export default function ProductCard({ item, onOpenDetail }: Props) {
           {quantity > 0 && !isDisabled ? (
             <div
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-2 bg-pink-50 border border-pink-100 rounded-full px-2 py-1"
-            >
+              className="flex items-center gap-2 bg-pink-50 border border-pink-100 rounded-full px-2 py-1">
               <button
                 onClick={(e) => handleQtyChange(e, quantity - 1)}
-                className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-pink-600 shadow-sm hover:bg-pink-100 transition-colors text-sm font-bold"
-              >
+                className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-pink-600 shadow-sm hover:bg-pink-100 transition-colors text-sm font-bold">
                 −
               </button>
-              <span className="w-4 text-center text-sm font-bold text-pink-900">{quantity}</span>
+              <span className="w-4 text-center text-sm font-bold text-pink-900">
+                {quantity}
+              </span>
               <button
                 onClick={(e) => handleQtyChange(e, quantity + 1)}
-                className="w-6 h-6 flex items-center justify-center rounded-full bg-pink-500 text-white shadow-sm hover:bg-pink-600 transition-colors text-sm font-bold"
-              >
+                className="w-6 h-6 flex items-center justify-center rounded-full bg-pink-500 text-white shadow-sm hover:bg-pink-600 transition-colors text-sm font-bold">
                 +
               </button>
             </div>
@@ -148,10 +158,11 @@ export default function ProductCard({ item, onOpenDetail }: Props) {
               whileTap={{ scale: 0.88 }}
               onClick={handleAdd}
               disabled={isDisabled}
-              className="flex items-center gap-1.5 bg-pink-500 hover:bg-pink-600 disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 text-xs font-bold px-4 py-2 rounded-full transition-colors shadow-sm"
-            >
-              <ShoppingCart className="w-3.5 h-3.5" />
-              {item.isComingSoon ? "Segera" : "Tambah"}
+              className="w-full flex items-center justify-center gap-1 bg-pink-500 hover:bg-pink-600 disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 text-[10px] sm:text-xs font-bold px-2 sm:px-4 py-1.5 sm:py-2 rounded-full transition-colors shadow-sm">
+              <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="truncate">
+                {item.isComingSoon ? "Segera" : "Tambah"}
+              </span>
             </motion.button>
           )}
         </div>

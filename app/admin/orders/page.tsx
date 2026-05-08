@@ -1,41 +1,23 @@
 import OrdersTableClient from "@/components/admin/OrdersTableClient";
 import { headers } from "next/headers";
 
-import { supabaseAdmin } from "@/lib/supabase";
+export const dynamic = "force-dynamic";
 
 async function getOrders() {
   try {
-    const { data: orders, error: ordersErr } = await supabaseAdmin
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const headerStore = await headers();
+    const cookieHeader = headerStore.get("cookie") || "";
+    const res = await fetch(`${baseUrl}/api/orders`, {
+      cache: "no-store",
+      headers: {
+        cookie: cookieHeader,
+      },
+    });
 
-    if (ordersErr || !orders) throw ordersErr || new Error('No orders found');
-
-    const { data: allItems } = await supabaseAdmin
-      .from('order_items')
-      .select('*')
-      .in('order_id', orders.map(o => o.id));
-
-    return orders.map(order => ({
-      id: order.id,
-      customerName: order.customer_name,
-      customerPhone: order.customer_phone,
-      totalPrice: order.total_price,
-      paymentMethod: order.payment_method,
-      deliveryMethod: order.delivery_method,
-      notes: order.notes ?? '',
-      status: order.status,
-      createdAt: order.created_at,
-      items: (allItems || [])
-        .filter(i => i.order_id === order.id)
-        .map(i => ({
-          menuId: i.menu_id,
-          name: i.name,
-          price: i.price,
-          quantity: i.quantity,
-        })),
-    }));
+    if (!res.ok) throw new Error("Gagal mengambil pesanan dari API");
+    const orders = await res.json();
+    return Array.isArray(orders) ? orders : [];
   } catch (error) {
     console.error('getOrders error:', error);
     return [];

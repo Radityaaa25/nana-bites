@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, DM_Sans, Playfair_Display } from "next/font/google";
+import {
+  Cormorant_Garamond,
+  DM_Sans,
+  Playfair_Display,
+} from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 
@@ -41,10 +45,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
       <body
-        className={`${cormorant.variable} ${dmSans.variable} ${playfair.variable} antialiased min-h-screen flex flex-col`}
-      >
+        className={`${cormorant.variable} ${dmSans.variable} ${playfair.variable} antialiased min-h-screen flex flex-col`}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined') {
+                window.addEventListener('load', function() {
+                  window.scrollTo(0, 0);
+                }, { once: true });
+                if (document.readyState === 'complete') {
+                  window.scrollTo(0, 0);
+                }
+              }
+            `,
+          }}
+        />
         <style>{`
           * {
             -webkit-font-smoothing: antialiased;

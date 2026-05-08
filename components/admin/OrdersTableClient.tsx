@@ -18,6 +18,13 @@ export default function OrdersTableClient({ initialOrders }: { initialOrders: an
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
+  const reloadOrdersFromServer = async () => {
+    const res = await fetch("/api/orders", { cache: "no-store" });
+    if (!res.ok) throw new Error("Gagal memuat data pesanan terbaru");
+    const latestOrders = await res.json();
+    setOrders(Array.isArray(latestOrders) ? latestOrders : []);
+  };
+
   const filteredOrders = orders.filter(o => filter === "all" ? true : o.status === filter);
 
   // Sort by date descending
@@ -29,9 +36,9 @@ export default function OrdersTableClient({ initialOrders }: { initialOrders: an
     try {
       const res = await fetch(`/api/orders/${selectedOrderId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Gagal hapus");
-      
+
+      await reloadOrdersFromServer();
       toast.success("Pesanan berhasil dihapus!");
-      setOrders(orders.filter(o => o.id !== selectedOrderId));
       setIsDeleteModalOpen(false);
       setSelectedOrderId(null);
       router.refresh();

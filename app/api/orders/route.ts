@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { hasSupabaseAdminConfig, supabaseAdmin } from "@/lib/supabase";
 
-function mapOrder(order: any, items: any[]) {
+function normalizeItems(items: any[] = []) {
+  return items.map((item: any) => ({
+    menuId: item.menuId ?? item.menu_id ?? null,
+    name: item.name,
+    price: item.price,
+    quantity: item.quantity,
+  }));
+}
+
+function mapOrder(order: any, items: any[] = []) {
+  const resolvedItems = Array.isArray(order.items) ? order.items : items;
   return {
     id: order.id,
     customerName: order.customer_name,
@@ -12,65 +22,107 @@ function mapOrder(order: any, items: any[]) {
     notes: order.notes ?? "",
     status: order.status,
     createdAt: order.created_at,
-    items: items.map((item: any) => ({
-      menuId: item.menu_id,
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity,
-    })),
+    items: normalizeItems(resolvedItems),
   };
 }
 
-export async function GET(request: Request) {
+function requireAdmin(request: Request): boolean {
   const cookieHeader = request.headers.get("cookie") || "";
-  if (!cookieHeader.includes("admin_session=")) {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  const cookies = cookieHeader
+    .split(";")
+    .reduce((acc: Record<string, string>, cookie) => {
+      const [key, value] = cookie.trim().split("=");
+      if (key && value) acc[key] = value;
+      return acc;
+    }, {});
+
+  const session = cookies["admin_session"];
+  return Boolean(session && adminPassword && session === adminPassword);
+}
+
+export async function GET(request: Request) {
+  // Only admin can fetch all orders
+  if (!requireAdmin(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: orders, error: ordersErr } = await supabaseAdmin
-    .from("orders")
-    .select("*")
-    .order("created_at", { ascending: false });
+  try {
+    const { data: orders, error: ordersErr } = await supabaseAdmin
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (ordersErr) {
-    console.error("GET /api/orders error:", ordersErr);
+    if (ordersErr) {
+      console.error("GET /api/orders error:", ordersErr);
+      return NextResponse.json(
+        { error: "Gagal mengambil pesanan" },
+        { status: 500 },
+      );
+    }
+
+    // Fetch all items for all orders in one query
+    const orderIds = (orders ?? []).map((o: any) => o.id);
+    const { data: allItems } = await supabaseAdmin
+      .from("order_items")
+      .select("*")
+      .in("order_id", orderIds.length > 0 ? orderIds : ["__none__"]);
+
+    const mapped = (orders ?? []).map((order: any) => {
+      const items = (allItems ?? []).filter(
+        (i: any) => i.order_id === order.id,
+      );
+      return mapOrder(order, items);
+    });
+
+    return NextResponse.json(mapped);
+  } catch (error) {
+    console.error("GET /api/orders uncaught error:", error);
     return NextResponse.json(
-      { error: "Gagal mengambil pesanan" },
+      { error: "Internal server error" },
       { status: 500 },
     );
   }
-
-  // Fetch all items for all orders in one query
-  const orderIds = (orders ?? []).map((o: any) => o.id);
-  const { data: allItems } = await supabaseAdmin
-    .from("order_items")
-    .select("*")
-    .in("order_id", orderIds.length > 0 ? orderIds : ["__none__"]);
-
-  const mapped = (orders ?? []).map((order: any) => {
-    const items = (allItems ?? []).filter((i: any) => i.order_id === order.id);
-    return mapOrder(order, items);
-  });
-
-  return NextResponse.json(mapped);
 }
 
 export async function POST(request: Request) {
   try {
+    if (!hasSupabaseAdminConfig) {
+      return Response.json(
+        {
+          error:
+            "Konfigurasi Supabase belum lengkap. Pastikan NEXT_PUBLIC_SUPABASE_URL dan SUPABASE_SERVICE_ROLE_KEY terisi.",
+        },
+        { status: 500 },
+      );
+    }
+
     const body = await request.json();
-    const {
-      customerName,
-      customerPhone,
-      items,
-      totalPrice,
-      paymentMethod,
-      deliveryMethod,
-      notes,
-    } = body;
+    const customerName = body.customer_name ?? body.customerName;
+    const customerPhone = body.customer_phone ?? body.customerPhone;
+    const items = body.items;
+    const totalPrice = body.total_price ?? body.totalPrice;
+    const paymentMethod = body.payment_method ?? body.paymentMethod;
+    const deliveryMethod = body.delivery_method ?? body.deliveryMethod;
+    const notes = body.notes;
 
     // Validation
-    if (!customerName || !customerPhone || !items || items.length === 0) {
+    if (
+      !customerName ||
+      !customerPhone ||
+      !Array.isArray(items) ||
+      items.length === 0
+    ) {
       return Response.json({ error: "Data tidak lengkap" }, { status: 400 });
+    }
+
+    const nameStr = String(customerName).trim();
+    if (!nameStr) {
+      return Response.json(
+        { error: "Nama tidak boleh kosong" },
+        { status: 400 },
+      );
     }
 
     const phoneRegex = /^(08|628)\d{8,12}$/;
@@ -81,62 +133,54 @@ export async function POST(request: Request) {
       );
     }
 
-    const orderId = `NB-${Date.now()}`;
+    const totalPriceNum = Number(totalPrice);
+    if (isNaN(totalPriceNum) || totalPriceNum < 0) {
+      return Response.json(
+        { error: "Total harga tidak valid" },
+        { status: 400 },
+      );
+    }
 
-    const { error: orderErr } = await supabaseAdmin.from("orders").insert({
+    const orderId = `NB-${Date.now()}`;
+    const orderData = {
       id: orderId,
-      customer_name: String(customerName).trim(),
+      customer_name: nameStr,
       customer_phone: String(customerPhone).trim(),
-      total_price: Number(totalPrice),
+      notes: notes ? String(notes).trim() : "",
+      items: normalizeItems(items),
+      total_price: totalPriceNum,
       payment_method: paymentMethod ?? "cash",
       delivery_method: deliveryMethod ?? "pickup",
-      notes: notes ? String(notes).trim() : "",
       status: "pending",
-    });
+      created_at: new Date().toISOString(),
+    };
 
-    if (orderErr) {
-      console.error("POST /api/orders order insert error:", orderErr);
-      return Response.json({ error: "Gagal membuat pesanan" }, { status: 500 });
-    }
+    console.log("Saving order:", orderData);
 
-    const itemRows = items.map((item: any) => ({
-      order_id: orderId,
-      menu_id: item.menuId ?? null,
-      name: String(item.name).trim(),
-      price: Number(item.price),
-      quantity: Number(item.quantity),
-    }));
-
-    const { error: itemsErr } = await supabaseAdmin
-      .from("order_items")
-      .insert(itemRows);
-
-    if (itemsErr) {
-      console.error("POST /api/orders items insert error:", itemsErr);
-      // Order is already saved; we still return orderId
-    }
-
-    // Fetch the order with items to return mapped format
-    const { data: createdOrder } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from("orders")
-      .select("*")
-      .eq("id", orderId)
+      .insert([orderData])
+      .select()
       .single();
 
-    const { data: orderItems } = await supabaseAdmin
-      .from("order_items")
-      .select("*")
-      .eq("order_id", orderId);
+    console.log("Supabase response:", data, error);
 
-    const mappedOrder = createdOrder
-      ? mapOrder(createdOrder, orderItems ?? [])
-      : null;
+    if (error) {
+      console.error("POST /api/orders insert error:", error);
+      return Response.json(
+        {
+          error:
+            error.message || "Gagal menyimpan pesanan ke database Supabase",
+        },
+        { status: 500 },
+      );
+    }
 
     return Response.json(
       {
         success: true,
         id: orderId,
-        order: mappedOrder,
+        order: data ? mapOrder(data) : null,
       },
       { status: 201 },
     );
