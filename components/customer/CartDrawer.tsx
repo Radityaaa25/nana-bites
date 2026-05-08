@@ -14,7 +14,7 @@ export default function CartDrawer() {
 
   return (
     <>
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isCartOpen && (
           <>
             {/* Backdrop */}
@@ -24,6 +24,7 @@ export default function CartDrawer() {
               exit={{ opacity: 0 }}
               onClick={() => setCartOpen(false)}
               className="fixed inset-0 z-50 bg-pink-900/20 backdrop-blur-sm"
+              style={{ willChange: "opacity" }}
             />
 
             {/* Drawer */}
@@ -33,6 +34,7 @@ export default function CartDrawer() {
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="fixed bottom-0 right-0 top-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl"
+              style={{ willChange: "transform", transform: "translateZ(0)" }}
             >
               <div className="flex items-center justify-between border-b border-pink-100 p-6">
                 <h2 className="font-playfair text-2xl font-bold text-pink-900">Keranjang Kamu 🛒</h2>

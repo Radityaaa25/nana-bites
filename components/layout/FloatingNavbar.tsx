@@ -32,6 +32,7 @@ export default function FloatingNavbar() {
         "fixed top-4 left-1/2 z-50 flex w-[90%] max-w-2xl items-center justify-between rounded-full border border-pink-100 px-6 py-3 shadow-lg transition-all duration-300",
         scrolled ? "bg-white/90 backdrop-blur-xl" : "bg-white/60 backdrop-blur-md"
       )}
+      style={{ willChange: "transform, opacity", transform: "translateX(-50%) translateZ(0)" }}
     >
       <Link href="/" className="flex items-center">
         <Image
@@ -60,6 +61,7 @@ export default function FloatingNavbar() {
             animate={{ scale: 1 }}
             key={cartCount}
             className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white"
+            style={{ willChange: "transform" }}
           >
             {cartCount}
           </motion.span>

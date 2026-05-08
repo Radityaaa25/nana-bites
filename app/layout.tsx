@@ -45,6 +45,13 @@ export default function RootLayout({
       <body
         className={`${cormorant.variable} ${dmSans.variable} ${playfair.variable} antialiased min-h-screen flex flex-col`}
       >
+        <style>{`
+          * {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            backface-visibility: hidden;
+          }
+        `}</style>
         {children}
         <Toaster position="top-center" richColors />
       </body>

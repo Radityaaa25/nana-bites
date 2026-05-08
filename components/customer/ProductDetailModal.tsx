@@ -41,7 +41,7 @@ export default function ProductDetailModal({ item, onClose }: Props) {
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {item && (
         <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
           {/* Backdrop */}
@@ -51,6 +51,7 @@ export default function ProductDetailModal({ item, onClose }: Props) {
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="absolute inset-0 bg-pink-950/40 backdrop-blur-sm"
+            style={{ willChange: "opacity" }}
           />
 
           {/* Modal card */}
@@ -60,6 +61,7 @@ export default function ProductDetailModal({ item, onClose }: Props) {
             exit={{ opacity: 0, y: 80, scale: 0.96 }}
             transition={{ type: "spring", damping: 28, stiffness: 260 }}
             className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+            style={{ willChange: "transform, opacity", transform: "translateZ(0)" }}
           >
             {/* Close button */}
             <button

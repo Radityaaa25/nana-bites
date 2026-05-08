@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useInView, type Variants } from "framer-motion";
+import { motion, useInView, type Variants, AnimatePresence } from "framer-motion";
 import { useRef, useState } from "react";
 import Image from "next/image";
 import ProductCard from "./ProductCard";
@@ -45,6 +45,7 @@ function AnimatedSection({
       animate={isInView ? "visible" : "hidden"}
       variants={stagger}
       className={className}
+      style={{ willChange: "transform, opacity" }}
     >
       {children}
     </motion.div>
@@ -65,6 +66,7 @@ function StepCard({
     <motion.div
       variants={fadeUp}
       className="flex flex-col items-center text-center p-6 rounded-3xl bg-pink-50/50 border border-pink-100 hover:border-pink-200 hover:bg-pink-50 transition-colors"
+      style={{ transform: "translateZ(0)", willChange: "transform, opacity" }}
     >
       <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-3xl mb-4">
         {emoji}
@@ -92,6 +94,7 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8, duration: 0.5, ease: "easeOut" as const }}
         className="fixed top-[72px] left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-xl"
+        style={{ willChange: "transform, opacity", transform: "translateZ(0)" }}
       >
         
       </motion.div>
@@ -116,7 +119,7 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
         />
 
         <div className="container px-4 mx-auto relative z-10 text-center max-w-3xl">
-          <motion.div initial="hidden" animate="visible" variants={stagger}>
+          <motion.div initial="hidden" animate="visible" variants={stagger} style={{ transform: "translateZ(0)", willChange: "transform, opacity" }}>
             <motion.p
               variants={fadeUp}
               className="text-pink-500 font-semibold text-sm tracking-widest uppercase mb-4"
@@ -152,6 +155,7 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-pink-500 text-white font-bold text-lg shadow-pink hover:bg-pink-600 transition-colors"
+                style={{ willChange: "transform" }}
               >
                 Lihat Menu 🍫
               </motion.a>
@@ -160,6 +164,7 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-pink-600 font-bold text-lg shadow-sm border border-pink-100 hover:bg-pink-50 transition-colors"
+                style={{ willChange: "transform" }}
               >
                 Cara Pesan
               </motion.a>
@@ -247,6 +252,7 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
             animate={menuInView ? "visible" : "hidden"}
             variants={cardStagger}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            style={{ willChange: "transform, opacity" }}
           >
             {menuItems.map((item: any) => (
               <ProductCard
@@ -334,7 +340,15 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
       </footer>
 
       {/* Modals & Drawer */}
-      <ProductDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+      <AnimatePresence mode="wait">
+        {selectedItem && (
+          <ProductDetailModal 
+            key="product-detail"
+            item={selectedItem} 
+            onClose={() => setSelectedItem(null)} 
+          />
+        )}
+      </AnimatePresence>
       <CartDrawer />
     </>
   );

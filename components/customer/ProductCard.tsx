@@ -58,6 +58,7 @@ export default function ProductCard({ item, onOpenDetail }: Props) {
       className={`group relative overflow-hidden rounded-2xl border bg-white cursor-pointer transition-shadow ${
         isDisabled ? "border-gray-200 opacity-60" : "border-pink-100 hover:border-pink-200"
       } ${!item.isAvailable && !item.isComingSoon ? "grayscale" : ""}`}
+      style={{ willChange: "transform, opacity", transform: "translateZ(0)" }}
     >
       {/* Image */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-pink-50">

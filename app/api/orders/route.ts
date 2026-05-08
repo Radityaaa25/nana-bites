@@ -59,12 +59,12 @@ export async function POST(request: Request) {
 
     // Validation
     if (!customerName || !customerPhone || !items || items.length === 0) {
-      return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
+      return Response.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
 
     const phoneRegex = /^(08|628)\d{8,12}$/;
     if (!phoneRegex.test(String(customerPhone).trim())) {
-      return NextResponse.json({ error: 'Format nomor HP tidak valid' }, { status: 400 });
+      return Response.json({ error: 'Format nomor HP tidak valid' }, { status: 400 });
     }
 
     const orderId = `NB-${Date.now()}`;
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
 
     if (orderErr) {
       console.error('POST /api/orders order insert error:', orderErr);
-      return NextResponse.json({ error: 'Gagal membuat pesanan' }, { status: 500 });
+      return Response.json({ error: 'Gagal membuat pesanan' }, { status: 500 });
     }
 
     const itemRows = items.map((item: any) => ({
@@ -100,9 +100,10 @@ export async function POST(request: Request) {
       // Order is already saved; we still return orderId
     }
 
-    return NextResponse.json({ orderId }, { status: 201 });
+    return Response.json({ orderId }, { status: 201 });
 
-  } catch {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('POST /api/orders uncaught error:', error);
+    return Response.json({ error: error?.message || 'Server error' }, { status: 500 });
   }
 }

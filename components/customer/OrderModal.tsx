@@ -52,7 +52,10 @@ export default function OrderModal({ isOpen, onClose }: { isOpen: boolean; onClo
         }),
       });
 
-      if (!res.ok) throw new Error("Gagal membuat pesanan");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Gagal membuat pesanan");
+      }
       
       const { orderId } = await res.json();
       
@@ -67,6 +70,9 @@ export default function OrderModal({ isOpen, onClose }: { isOpen: boolean; onClo
 
       const link = generateWaLink(waNumber, waText);
       
+      // Buka WA dulu baru redirect (sesuai instruksi: After dapat orderId, window.open lalu router.push)
+      window.open(link, "_blank");
+      
       clearCart();
       setFormData({ name: "", phone: "", notes: "" });
       setStep(1);
@@ -74,19 +80,17 @@ export default function OrderModal({ isOpen, onClose }: { isOpen: boolean; onClo
       
       // Redirect ke /order/[id]
       router.push(`/order/${orderId}`);
-      
-      // Buka WA
-      window.open(link, "_blank");
 
-    } catch (error) {
-      toast.error("Waduh, gagal kirim pesanan nih. Coba lagi ya! 😢");
+    } catch (error: any) {
+      console.error('Order submission error:', error);
+      toast.error(error.message || "Waduh, gagal kirim pesanan nih. Coba lagi ya! 😢");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <motion.div
@@ -95,12 +99,15 @@ export default function OrderModal({ isOpen, onClose }: { isOpen: boolean; onClo
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="absolute inset-0 bg-pink-950/30 backdrop-blur-sm"
+            style={{ willChange: "opacity" }}
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl"
+            style={{ willChange: "transform, opacity", transform: "translateZ(0)" }}
           >
             {/* Header */}
             <div className="bg-pink-50 p-6 flex items-center justify-between">

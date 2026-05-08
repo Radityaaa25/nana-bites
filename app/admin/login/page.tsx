@@ -45,6 +45,7 @@ export default function AdminLogin() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-sm w-full bg-white rounded-3xl shadow-xl p-8 border border-pink-100"
+        style={{ willChange: "transform, opacity", transform: "translateZ(0)" }}
       >
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">

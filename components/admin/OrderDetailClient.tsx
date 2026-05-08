@@ -7,9 +7,13 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+import ConfirmationModal from "./ConfirmationModal";
+
 export default function OrderDetailClient({ order }: { order: any }) {
   const [status, setStatus] = useState(order.status);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
   const handleUpdateStatus = async (newStatus: string) => {
@@ -34,16 +38,18 @@ export default function OrderDetailClient({ order }: { order: any }) {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Yakin mau hapus pesanan ini?")) return;
-    
+    setIsDeleting(true);
     try {
       const res = await fetch(`/api/orders/${order.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Gagal hapus");
       
       toast.success("Pesanan berhasil dihapus!");
       router.push("/admin/orders");
+      router.refresh();
     } catch (error) {
       toast.error("Gagal menghapus pesanan");
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -203,7 +209,7 @@ export default function OrderDetailClient({ order }: { order: any }) {
 
           <div className="pt-4">
             <button 
-              onClick={handleDelete}
+              onClick={() => setIsDeleteModalOpen(true)}
               className="w-full py-3 text-red-500 hover:bg-red-50 font-bold rounded-xl transition-colors border border-red-100"
             >
               Hapus Pesanan Ini
@@ -211,6 +217,15 @@ export default function OrderDetailClient({ order }: { order: any }) {
           </div>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
+        title="Hapus Pesanan"
+        message={`Yakin mau hapus pesanan #${order.id}? Data yang dihapus tidak bisa dikembalikan lho kak. 🥺`}
+      />
     </div>
   );
 }

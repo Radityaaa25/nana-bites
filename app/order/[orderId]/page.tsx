@@ -4,14 +4,26 @@ import { CheckCircle2, Clock, CheckCircle } from "lucide-react";
 import { notFound } from "next/navigation";
 
 async function getOrder(id: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/orders/${id}`, { cache: 'no-store' });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/orders/${id}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return res.json();
+  } catch (error) {
+    console.error('Error fetching order:', error);
+    return null;
+  }
 }
 
 export default async function OrderPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
-  const order = await getOrder(orderId);
+  
+  let order;
+  try {
+    order = await getOrder(orderId);
+  } catch (error) {
+    console.error('Order page error:', error);
+    order = null;
+  }
 
   if (!order) {
     notFound();

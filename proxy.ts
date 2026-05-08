@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Standard Next.js middleware to protect admin routes
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   try {
     const pathname = request.nextUrl.pathname;
 

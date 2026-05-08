@@ -30,19 +30,24 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  try {
+    const { id } = await params;
 
-  const [{ data: order, error: orderErr }, { data: items, error: itemsErr }] =
-    await Promise.all([
-      supabaseAdmin.from('orders').select('*').eq('id', id).single(),
-      supabaseAdmin.from('order_items').select('*').eq('order_id', id),
-    ]);
+    const [{ data: order, error: orderErr }, { data: items, error: itemsErr }] =
+      await Promise.all([
+        supabaseAdmin.from('orders').select('*').eq('id', id).single(),
+        supabaseAdmin.from('order_items').select('*').eq('order_id', id),
+      ]);
 
-  if (orderErr || !order) {
-    return NextResponse.json({ error: 'Pesanan tidak ditemukan' }, { status: 404 });
+    if (orderErr || !order) {
+      return Response.json({ error: 'Pesanan tidak ditemukan' }, { status: 404 });
+    }
+
+    return Response.json(mapOrder(order, items ?? []));
+  } catch (error: any) {
+    console.error('GET /api/orders/[id] error:', error);
+    return Response.json({ error: error?.message || 'Server error' }, { status: 500 });
   }
-
-  return NextResponse.json(mapOrder(order, items ?? []));
 }
 
 export async function PUT(
