@@ -63,14 +63,14 @@ export default function ProductCard({ item, onOpenDetail }: Props) {
       }
       whileTap={isDisabled ? {} : { scale: 0.98 }}
       onClick={() => onOpenDetail(item)}
-      className={`group relative overflow-hidden rounded-2xl border bg-white cursor-pointer transition-shadow ${
+      className={`group relative rounded-2xl overflow-hidden bg-white shadow-sm border flex flex-col cursor-pointer transition-all ${
         isDisabled
           ? "border-gray-200 opacity-60"
-          : "border-pink-100 hover:border-pink-200"
-      } ${!item.isAvailable && !item.isComingSoon ? "grayscale" : ""}`}
+          : "border-pink-50 hover:border-pink-200 hover:shadow-md"
+      }`}
       style={{ willChange: "transform, opacity", transform: "translateZ(0)" }}>
       {/* Image */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-pink-50">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-pink-50 flex-shrink-0">
         <Image
           src={
             item.image ||
@@ -121,16 +121,18 @@ export default function ProductCard({ item, onOpenDetail }: Props) {
       </div>
 
       {/* Content */}
-      <div className="p-4">
-        <h3 className="font-heading text-[17px] font-bold text-pink-900 line-clamp-1 mb-1">
-          {item.name}
-        </h3>
-        <p className="text-xs text-pink-700/60 line-clamp-2 min-h-[32px] leading-relaxed">
-          {item.description}
-        </p>
+      <div className="p-3 flex flex-col gap-2 flex-1">
+        <div className="flex-1">
+          <h3 className="font-heading text-sm font-bold text-pink-900 line-clamp-2 mb-1">
+            {item.name}
+          </h3>
+          <p className="text-xs text-pink-700/60 line-clamp-2 leading-relaxed">
+            {item.description}
+          </p>
+        </div>
 
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-pink-50">
-          <span className="font-body text-base font-bold text-pink-600">
+        <div className="flex items-center justify-between pt-2 border-t border-pink-50">
+          <span className="font-body text-sm font-bold text-pink-600">
             {formatRupiah(item.price)}
           </span>
 
@@ -138,30 +140,34 @@ export default function ProductCard({ item, onOpenDetail }: Props) {
           {quantity > 0 && !isDisabled ? (
             <div
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-2 bg-pink-50 border border-pink-100 rounded-full px-2 py-1">
+              className="flex items-center gap-1.5 bg-pink-50 border border-pink-100 rounded-full p-1">
               <button
                 onClick={(e) => handleQtyChange(e, quantity - 1)}
-                className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-pink-600 shadow-sm hover:bg-pink-100 transition-colors text-sm font-bold">
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-white text-pink-600 shadow-sm hover:bg-pink-100 transition-colors text-sm font-bold">
                 −
               </button>
-              <span className="w-4 text-center text-sm font-bold text-pink-900">
+              <span className="text-sm font-bold min-w-[1.5rem] text-center text-pink-900">
                 {quantity}
               </span>
               <button
                 onClick={(e) => handleQtyChange(e, quantity + 1)}
-                className="w-6 h-6 flex items-center justify-center rounded-full bg-pink-500 text-white shadow-sm hover:bg-pink-600 transition-colors text-sm font-bold">
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-pink-500 text-white shadow-sm hover:bg-pink-600 transition-colors text-sm font-bold">
                 +
               </button>
             </div>
           ) : (
-            <motion.button
+              <motion.button
               whileTap={{ scale: 0.88 }}
               onClick={handleAdd}
               disabled={isDisabled}
-              className="w-full flex items-center justify-center gap-1 bg-pink-500 hover:bg-pink-600 disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 text-[10px] sm:text-xs font-bold px-2 sm:px-4 py-1.5 sm:py-2 rounded-full transition-colors shadow-sm">
-              <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-full bg-pink-500 hover:bg-pink-600 disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 text-xs font-semibold transition-all duration-200 shadow-sm whitespace-nowrap w-full">
+              <ShoppingCart className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">
-                {item.isComingSoon ? "Segera" : "Tambah"}
+                {item.isComingSoon
+                  ? "Segera"
+                  : item.isAvailable
+                    ? "Tambah"
+                    : "Habis"}
               </span>
             </motion.button>
           )}

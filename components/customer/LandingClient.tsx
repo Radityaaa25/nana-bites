@@ -11,7 +11,9 @@ import Image from "next/image";
 import ProductCard from "./ProductCard";
 import ProductDetailModal from "./ProductDetailModal";
 import CartDrawer from "./CartDrawer";
+import FloatingCartBar from "./FloatingCartBar";
 import FloatingNavbar from "@/components/layout/FloatingNavbar";
+import { useCartStore } from "@/lib/store";
 
 // ─── Animation Variants (typed to fix TS ease error) ──────────────────────
 const fadeUp: Variants = {
@@ -83,8 +85,26 @@ function StepCard({
 }
 
 // ─── Main Landing Client Component ────────────────────────────────────────
-export default function LandingClient({ menuItems }: { menuItems: any[] }) {
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+type MenuItem = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  isBestSeller: boolean;
+  isAvailable: boolean;
+  isComingSoon?: boolean;
+};
+
+type SelectedItem = MenuItem | null;
+
+export default function LandingClient({
+  menuItems,
+}: {
+  menuItems: MenuItem[];
+}) {
+  const [selectedItem, setSelectedItem] = useState<SelectedItem>(null);
+  const { setCartOpen, items } = useCartStore();
 
   const menuRef = useRef(null);
   const menuInView = useInView(menuRef, { once: true, margin: "-60px" });
@@ -94,8 +114,10 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
     window.scrollTo(0, 0);
   }, []);
 
+  const hasItems = items.length > 0;
+
   return (
-    <>
+    <div className={hasItems ? "pb-24 md:pb-0" : ""}>
       <FloatingNavbar />
 
       {/* ── Preorder Announcement Banner ───────────────────────────────── */}
@@ -221,8 +243,9 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
               <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-2 mt-2.5 rounded-full">
                 <span>📦</span>
                 <span className="text-amber-800">
-                  <span className="font-bold">Pre-Order</span> — Pesanan
-                  diproses &amp; siap diambil besok atau sesuai jadwal.
+                  <span className="font-bold">Pre-Order</span>
+                  {" — "}
+                  Pesanan diproses &amp; siap diambil besok atau sesuai jadwal.
                   Konfirmasi via WhatsApp ya! 🙏
                 </span>
               </div>
@@ -267,8 +290,9 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
               <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-2 rounded-full">
                 <span>📦</span>
                 <span className="text-amber-800">
-                  <span className="font-bold">Pre-Order</span> — Pesanan
-                  diproses &amp; siap diambil besok atau sesuai jadwal.
+                  <span className="font-bold">Pre-Order</span>
+                  {" — "}
+                  Pesanan diproses &amp; siap diambil besok atau sesuai jadwal.
                   Konfirmasi via WhatsApp ya! 🙏
                 </span>
               </div>
@@ -280,9 +304,9 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
             initial="hidden"
             animate={menuInView ? "visible" : "hidden"}
             variants={cardStagger}
-            className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
             style={{ willChange: "transform, opacity" }}>
-            {menuItems.map((item: any) => (
+            {menuItems.map((item) => (
               <ProductCard
                 key={item.id}
                 item={item}
@@ -366,6 +390,9 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
         </div>
       </footer>
 
+      {/* Floating Cart Bar - appears when items in cart */}
+      <FloatingCartBar onOpenCart={() => setCartOpen(true)} />
+
       {/* Modals & Drawer */}
       <AnimatePresence mode="wait">
         {selectedItem && (
@@ -377,6 +404,6 @@ export default function LandingClient({ menuItems }: { menuItems: any[] }) {
         )}
       </AnimatePresence>
       <CartDrawer />
-    </>
+    </div>
   );
 }

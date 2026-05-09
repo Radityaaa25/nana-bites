@@ -1,194 +1,189 @@
-import { NextResponse } from "next/server";
-import { hasSupabaseAdminConfig, supabaseAdmin } from "@/lib/supabase";
+import { createAdminSupabase } from '@/lib/supabase-admin'
+import { NextRequest } from 'next/server'
 
-function normalizeItems(items: any[] = []) {
-  return items.map((item: any) => ({
+function requireAdmin(request: NextRequest | Request): boolean {
+  const cookieHeader = (request as Request).headers.get('cookie') || ''
+  const adminPassword = process.env.ADMIN_PASSWORD
+
+  const cookies = cookieHeader
+    .split(';')
+    .reduce((acc: Record<string, string>, cookie) => {
+      const [key, value] = cookie.trim().split('=')
+      if (key && value) acc[key] = value
+      return acc
+    }, {})
+
+  const session = cookies['admin_session']
+  return Boolean(session && adminPassword && session === adminPassword)
+}
+
+type OrderItemRow = {
+  menuId?: string | null
+  menu_id?: string | null
+  order_id?: string
+  name: string
+  price: number
+  quantity: number
+}
+
+function normalizeItems(items: OrderItemRow[] = []) {
+  return items.map((item) => ({
     menuId: item.menuId ?? item.menu_id ?? null,
     name: item.name,
     price: item.price,
     quantity: item.quantity,
-  }));
-}
-
-function mapOrder(order: any, items: any[] = []) {
-  const resolvedItems = Array.isArray(order.items) ? order.items : items;
-  return {
-    id: order.id,
-    customerName: order.customer_name,
-    customerPhone: order.customer_phone,
-    totalPrice: order.total_price,
-    paymentMethod: order.payment_method,
-    deliveryMethod: order.delivery_method,
-    notes: order.notes ?? "",
-    status: order.status,
-    createdAt: order.created_at,
-    items: normalizeItems(resolvedItems),
-  };
-}
-
-function requireAdmin(request: Request): boolean {
-  const cookieHeader = request.headers.get("cookie") || "";
-  const adminPassword = process.env.ADMIN_PASSWORD;
-
-  const cookies = cookieHeader
-    .split(";")
-    .reduce((acc: Record<string, string>, cookie) => {
-      const [key, value] = cookie.trim().split("=");
-      if (key && value) acc[key] = value;
-      return acc;
-    }, {});
-
-  const session = cookies["admin_session"];
-  return Boolean(session && adminPassword && session === adminPassword);
+  }))
 }
 
 export async function GET(request: Request) {
-  // Only admin can fetch all orders
   if (!requireAdmin(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const { data: orders, error: ordersErr } = await supabaseAdmin
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const supabase = createAdminSupabase()
+    const { data: orders, error: ordersErr } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false })
 
     if (ordersErr) {
-      console.error("GET /api/orders error:", ordersErr);
-      return NextResponse.json(
-        { error: "Gagal mengambil pesanan" },
-        { status: 500 },
-      );
+      console.error('GET /api/orders error:', ordersErr)
+      return Response.json({ error: 'Gagal mengambil pesanan' }, { status: 500 })
     }
 
-    // Fetch all items for all orders in one query
-    const orderIds = (orders ?? []).map((o: any) => o.id);
-    const { data: allItems } = await supabaseAdmin
-      .from("order_items")
-      .select("*")
-      .in("order_id", orderIds.length > 0 ? orderIds : ["__none__"]);
+    const { data: allItems } = await supabase
+      .from('order_items')
+      .select('*')
 
-    const mapped = (orders ?? []).map((order: any) => {
+    const mapped = (orders ?? []).map((rawOrder) => {
       const items = (allItems ?? []).filter(
-        (i: any) => i.order_id === order.id,
-      );
-      return mapOrder(order, items);
-    });
+        (i) => (i as OrderItemRow).order_id === rawOrder.id,
+      ) as OrderItemRow[]
+      return {
+        id: rawOrder.id,
+        customerName: rawOrder.customer_name,
+        customerPhone: rawOrder.customer_phone,
+        totalPrice: rawOrder.total_price,
+        paymentMethod: rawOrder.payment_method,
+        deliveryMethod: rawOrder.delivery_method,
+        notes: rawOrder.notes ?? '',
+        status: rawOrder.status,
+        createdAt: rawOrder.created_at,
+        items: normalizeItems(Array.isArray(rawOrder.items) ? rawOrder.items : items),
+      }
+    })
 
-    return NextResponse.json(mapped);
+    return Response.json(mapped)
   } catch (error) {
-    console.error("GET /api/orders uncaught error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    console.error('GET /api/orders uncaught error:', error)
+    return Response.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
-    if (!hasSupabaseAdminConfig) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseKey) {
       return Response.json(
         {
           error:
-            "Konfigurasi Supabase belum lengkap. Pastikan NEXT_PUBLIC_SUPABASE_URL dan SUPABASE_SERVICE_ROLE_KEY terisi.",
+            'Konfigurasi Supabase belum lengkap. Pastikan NEXT_PUBLIC_SUPABASE_URL dan SUPABASE_SERVICE_ROLE_KEY terisi.',
         },
         { status: 500 },
-      );
+      )
     }
 
-    const body = await request.json();
-    const customerName = body.customer_name ?? body.customerName;
-    const customerPhone = body.customer_phone ?? body.customerPhone;
-    const items = body.items;
-    const totalPrice = body.total_price ?? body.totalPrice;
-    const paymentMethod = body.payment_method ?? body.paymentMethod;
-    const deliveryMethod = body.delivery_method ?? body.deliveryMethod;
-    const notes = body.notes;
+    const body = (await request.json()) as {
+      customer_name?: string
+      customerName?: string
+      customer_phone?: string
+      customerPhone?: string
+      items?: OrderItemRow[]
+      total_price?: number
+      totalPrice?: number
+      payment_method?: string
+      paymentMethod?: string
+      delivery_method?: string
+      deliveryMethod?: string
+      notes?: string
+    }
 
-    // Validation
+    const customerName = body.customer_name ?? body.customerName
+    const customerPhone = body.customer_phone ?? body.customerPhone
+    const items = body.items
+    const totalPrice = body.total_price ?? body.totalPrice
+    const paymentMethod = body.payment_method ?? body.paymentMethod
+    const deliveryMethod = body.delivery_method ?? body.deliveryMethod
+    const notes = body.notes
+
     if (
       !customerName ||
       !customerPhone ||
       !Array.isArray(items) ||
       items.length === 0
     ) {
-      return Response.json({ error: "Data tidak lengkap" }, { status: 400 });
+      return Response.json({ error: 'Data tidak lengkap' }, { status: 400 })
     }
 
-    const nameStr = String(customerName).trim();
+    const nameStr = String(customerName).trim()
     if (!nameStr) {
-      return Response.json(
-        { error: "Nama tidak boleh kosong" },
-        { status: 400 },
-      );
+      return Response.json({ error: 'Nama tidak boleh kosong' }, { status: 400 })
     }
 
-    const phoneRegex = /^(08|628)\d{8,12}$/;
+    const phoneRegex = /^(08|628)\d{8,12}$/
     if (!phoneRegex.test(String(customerPhone).trim())) {
       return Response.json(
-        { error: "Format nomor HP tidak valid" },
+        { error: 'Format nomor HP tidak valid' },
         { status: 400 },
-      );
+      )
     }
 
-    const totalPriceNum = Number(totalPrice);
+    const totalPriceNum = Number(totalPrice)
     if (isNaN(totalPriceNum) || totalPriceNum < 0) {
-      return Response.json(
-        { error: "Total harga tidak valid" },
-        { status: 400 },
-      );
+      return Response.json({ error: 'Total harga tidak valid' }, { status: 400 })
     }
 
-    const orderId = `NB-${Date.now()}`;
+    const orderId = `NB-${Date.now()}`
     const orderData = {
       id: orderId,
       customer_name: nameStr,
       customer_phone: String(customerPhone).trim(),
-      notes: notes ? String(notes).trim() : "",
+      notes: notes ? String(notes).trim() : '',
       items: normalizeItems(items),
       total_price: totalPriceNum,
-      payment_method: paymentMethod ?? "cash",
-      delivery_method: deliveryMethod ?? "pickup",
-      status: "pending",
+      payment_method: paymentMethod ?? 'cash',
+      delivery_method: deliveryMethod ?? 'pickup',
+      status: 'pending',
       created_at: new Date().toISOString(),
-    };
+    }
 
-    console.log("Saving order:", orderData);
-
-    const { data, error } = await supabaseAdmin
-      .from("orders")
+    const supabase = createAdminSupabase()
+    const { data, error } = await supabase
+      .from('orders')
       .insert([orderData])
       .select()
-      .single();
-
-    console.log("Supabase response:", data, error);
+      .single()
 
     if (error) {
-      console.error("POST /api/orders insert error:", error);
+      console.error('POST /api/orders insert error:', error)
       return Response.json(
-        {
-          error:
-            error.message || "Gagal menyimpan pesanan ke database Supabase",
-        },
+        { error: error.message || 'Gagal menyimpan pesanan ke database Supabase' },
         { status: 500 },
-      );
+      )
     }
 
     return Response.json(
-      {
-        success: true,
-        id: orderId,
-        order: data ? mapOrder(data) : null,
-      },
+      { success: true, id: orderId, order: data ?? null },
       { status: 201 },
-    );
-  } catch (error: any) {
-    console.error("POST /api/orders uncaught error:", error);
+    )
+  } catch (error) {
+    console.error('POST /api/orders uncaught error:', error)
     return Response.json(
-      { error: error?.message || "Server error" },
+      { error: (error as Error | undefined)?.message || 'Server error' },
       { status: 500 },
-    );
+    )
   }
 }

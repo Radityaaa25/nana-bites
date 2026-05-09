@@ -1,5 +1,5 @@
 import MenuTableClient from "@/components/admin/MenuTableClient";
-import { headers } from "next/headers";
+
 
 import { supabaseAdmin } from "@/lib/supabase";
 

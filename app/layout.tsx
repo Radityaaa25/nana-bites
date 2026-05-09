@@ -6,6 +6,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import ScrollToTop from "@/components/ScrollToTop";
 
 // Primary heading font (landing page, sections)
 const cormorant = Cormorant_Garamond({
@@ -45,23 +46,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" suppressHydrationWarning>
+    <html lang="id" suppressHydrationWarning data-scroll-behavior="smooth">
       <body
+        suppressHydrationWarning
         className={`${cormorant.variable} ${dmSans.variable} ${playfair.variable} antialiased min-h-screen flex flex-col`}>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if (typeof window !== 'undefined') {
-                window.addEventListener('load', function() {
-                  window.scrollTo(0, 0);
-                }, { once: true });
-                if (document.readyState === 'complete') {
-                  window.scrollTo(0, 0);
-                }
-              }
-            `,
-          }}
-        />
         <style>{`
           * {
             -webkit-font-smoothing: antialiased;
@@ -70,6 +58,7 @@ export default function RootLayout({
           }
         `}</style>
         {children}
+        <ScrollToTop />
         <Toaster position="top-center" richColors />
       </body>
     </html>

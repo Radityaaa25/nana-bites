@@ -1,23 +1,28 @@
 import OrderDetailClient from "@/components/admin/OrderDetailClient";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-
-import { supabaseAdmin } from "@/lib/supabase";
+import { createAdminSupabase } from "@/lib/supabase-admin";
 
 async function getOrder(id: string) {
   try {
-    const { data: order, error: orderErr } = await supabaseAdmin
-      .from('orders')
-      .select('*')
-      .eq('id', id)
+    const supabase = createAdminSupabase();
+    const { data: order, error: orderErr } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", id)
       .single();
 
-    if (orderErr || !order) throw orderErr || new Error('Order not found');
+    if (orderErr || !order) throw orderErr || new Error("Order not found");
 
-    const { data: items } = await supabaseAdmin
-      .from('order_items')
-      .select('*')
-      .eq('order_id', id);
+    let items = [];
+    if (Array.isArray(order.items) && order.items.length > 0) {
+      items = order.items;
+    } else {
+      const { data: legacyItems } = await supabase
+        .from("order_items")
+        .select("*")
+        .eq("order_id", id);
+      items = legacyItems ?? [];
+    }
 
     return {
       id: order.id,
@@ -26,29 +31,33 @@ async function getOrder(id: string) {
       totalPrice: order.total_price,
       paymentMethod: order.payment_method,
       deliveryMethod: order.delivery_method,
-      notes: order.notes ?? '',
+      notes: order.notes ?? "",
       status: order.status,
       createdAt: order.created_at,
-      items: (items || []).map(i => ({
-        menuId: i.menu_id,
+      items: items.map((i: { menuId?: string | null; menu_id?: string | null; name: string; price: number; quantity: number }) => ({
+        menuId: i.menuId ?? i.menu_id ?? null,
         name: i.name,
         price: i.price,
         quantity: i.quantity,
       })),
     };
   } catch (error) {
-    console.error('getOrder error:', error);
+    console.error("getOrder error:", error);
     return null;
   }
 }
 
-export default async function AdminOrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
+export default async function AdminOrderDetailPage({
+  params,
+}: {
+  params: Promise<{ orderId: string }>;
+}) {
   const { orderId } = await params;
   const order = await getOrder(orderId);
-  
+
   if (!order) {
     notFound();
   }
-  
+
   return <OrderDetailClient order={order} />;
 }

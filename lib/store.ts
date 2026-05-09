@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export interface CartItem {
   menuId: string;
@@ -12,7 +12,7 @@ export interface CartItem {
 interface CartState {
   items: CartItem[];
   isCartOpen: boolean;
-  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  addItem: (item: Omit<CartItem, "quantity">) => void;
   removeItem: (menuId: string) => void;
   updateQuantity: (menuId: string, quantity: number) => void;
   clearCart: () => void;
@@ -30,20 +30,23 @@ export const useCartStore = create<CartState>()(
 
       addItem: (item) => {
         set((state) => {
-          const existingItem = state.items.find((i) => i.menuId === item.menuId);
+          const existingItem = state.items.find(
+            (i) => i.menuId === item.menuId,
+          );
           if (existingItem) {
             return {
               items: state.items.map((i) =>
                 i.menuId === item.menuId
                   ? { ...i, quantity: i.quantity + 1 }
-                  : i
+                  : i,
               ),
-              isCartOpen: true,
+              // FIX BUG 5: Don't auto-open cart when adding item
+              // User should explicitly click FloatingCartBar to open
             };
           }
           return {
             items: [...state.items, { ...item, quantity: 1 }],
-            isCartOpen: true,
+            // FIX BUG 5: Don't auto-open cart when adding item
           };
         });
       },
@@ -61,20 +64,23 @@ export const useCartStore = create<CartState>()(
         }
         set((state) => ({
           items: state.items.map((i) =>
-            i.menuId === menuId ? { ...i, quantity } : i
+            i.menuId === menuId ? { ...i, quantity } : i,
           ),
         }));
       },
 
       clearCart: () => set({ items: [] }),
-      
+
       setCartOpen: (isOpen) => set({ isCartOpen: isOpen }),
-      
+
       toggleCart: () => set((state) => ({ isCartOpen: !state.isCartOpen })),
 
       getCartTotal: () => {
         const { items } = get();
-        return items.reduce((total, item) => total + item.price * item.quantity, 0);
+        return items.reduce(
+          (total, item) => total + item.price * item.quantity,
+          0,
+        );
       },
 
       getCartCount: () => {
@@ -83,8 +89,8 @@ export const useCartStore = create<CartState>()(
       },
     }),
     {
-      name: 'nanabites-cart',
+      name: "nanabites-cart",
       partialize: (state) => ({ items: state.items }), // Only persist items
-    }
-  )
+    },
+  ),
 );

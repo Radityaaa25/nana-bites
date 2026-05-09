@@ -23,7 +23,8 @@ export default async function OrderPage({
 }) {
   const { orderId } = await params;
 
-  let order;
+  let order: OrderRow | null;
+
   try {
     order = await getOrder(orderId);
   } catch (error) {
@@ -106,6 +107,28 @@ export default async function OrderPage({
     );
   }
 
+  type OrderStatus = "pending" | "processing" | "completed";
+
+  type OrderItemRow = {
+    menuId: string | null;
+    name: string;
+    price: number;
+    quantity: number;
+  };
+
+  type OrderRow = {
+    id: string;
+    customerName: string;
+    customerPhone: string;
+    totalPrice: number;
+    paymentMethod: string;
+    deliveryMethod: string;
+    notes?: string;
+    status: OrderStatus;
+    createdAt: string;
+    items: OrderItemRow[];
+  };
+
   return (
     <div className="min-h-screen bg-pink-50/30 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden">
@@ -135,7 +158,7 @@ export default async function OrderPage({
           <div className="space-y-4 mb-6">
             <h3 className="font-bold text-pink-900 text-sm">Detail Item</h3>
             <div className="space-y-3">
-              {order.items.map((item: any, i: number) => (
+              {order.items.map((item: OrderItemRow, i: number) => (
                 <div key={i} className="flex justify-between text-sm">
                   <span className="text-pink-800">
                     {item.quantity}x {item.name}

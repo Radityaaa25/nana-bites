@@ -1,31 +1,40 @@
-import OrdersTableClient from "@/components/admin/OrdersTableClient";
-import { headers } from "next/headers";
+import { createAdminSupabase } from '@/lib/supabase-admin'
+import OrdersTableClient from '@/components/admin/OrdersTableClient'
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
 async function getOrders() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const headerStore = await headers();
-    const cookieHeader = headerStore.get("cookie") || "";
-    const res = await fetch(`${baseUrl}/api/orders`, {
-      cache: "no-store",
-      headers: {
-        cookie: cookieHeader,
-      },
-    });
+    const supabase = createAdminSupabase()
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false })
 
-    if (!res.ok) throw new Error("Gagal mengambil pesanan dari API");
-    const orders = await res.json();
-    return Array.isArray(orders) ? orders : [];
+    if (error) {
+      console.error('Error fetching orders:', error)
+      return []
+    }
+
+    return (data ?? []).map((o) => ({
+      id: o.id,
+      customerName: o.customer_name,
+      customerPhone: o.customer_phone,
+      totalPrice: o.total_price,
+      paymentMethod: o.payment_method,
+      deliveryMethod: o.delivery_method,
+      notes: o.notes ?? '',
+      status: o.status,
+      createdAt: o.created_at,
+      items: Array.isArray(o.items) ? o.items : [],
+    }))
   } catch (error) {
-    console.error('getOrders error:', error);
-    return [];
+    console.error('getOrders error:', error)
+    return []
   }
 }
 
 export default async function AdminOrdersPage() {
-  const orders = await getOrders();
-  
-  return <OrdersTableClient initialOrders={orders} />;
+  const orders = await getOrders()
+  return <OrdersTableClient initialOrders={orders} />
 }
