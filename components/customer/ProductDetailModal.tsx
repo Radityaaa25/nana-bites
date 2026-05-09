@@ -140,9 +140,9 @@ export default function ProductDetailModal({ item, onClose }: Props) {
                     whileTap={{ scale: 0.92 }}
                     onClick={handleAdd}
                     disabled={!!isDisabled}
-                    className="flex items-center gap-2 bg-pink-500 hover:bg-pink-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold px-6 py-3 rounded-full shadow-pink transition-all"
+                    className="flex items-center gap-1 bg-pink-500 hover:bg-pink-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold px-3 py-3 rounded-full shadow-pink transition-all"
                   >
-                    <ShoppingCart className="w-4 h-4" />
+                    <ShoppingCart className="w-3 h-3" />
                     {item.isComingSoon ? "Segera Hadir" : !item.isAvailable ? "Habis" : "Tambah ke Keranjang"}
                   </motion.button>
                 )}

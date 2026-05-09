@@ -160,9 +160,9 @@ export default function ProductCard({ item, onOpenDetail }: Props) {
               whileTap={{ scale: 0.88 }}
               onClick={handleAdd}
               disabled={isDisabled}
-              className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-full bg-pink-500 hover:bg-pink-600 disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 text-xs font-semibold transition-all duration-200 shadow-sm whitespace-nowrap w-full">
-              <ShoppingCart className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="truncate">
+              className="flex items-center justify-center gap-1 py-2 px-8 rounded-full bg-pink-500 hover:bg-pink-600 disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 text-[11px] font-semibold transition-all duration-200 shadow-sm whitespace-nowrap">
+              <ShoppingCart className="w-3 h-3 flex-shrink-0" />
+              <span>
                 {item.isComingSoon
                   ? "Segera"
                   : item.isAvailable
