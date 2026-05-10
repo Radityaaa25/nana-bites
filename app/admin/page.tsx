@@ -1,4 +1,6 @@
 import { createAdminSupabase } from '@/lib/supabase-admin'
+
+export const dynamic = 'force-dynamic'
 import { UtensilsCrossed, Package, PackageOpen, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { formatRupiah, formatDate } from '@/lib/utils'

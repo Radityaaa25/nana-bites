@@ -100,9 +100,6 @@ export default function OrderModal({
 
       const link = generateWaLink(waNumber, waText);
 
-      // Buka WhatsApp
-      window.open(link, "_blank");
-
       // Simpan untuk success screen, lalu reset cart
       setCreatedOrderId(id);
       setLastOrderSummary({
@@ -114,6 +111,10 @@ export default function OrderModal({
 
       // Tampilkan toast sukses
       toast.success("Pesanan berhasil dibuat! 🎉");
+
+      // Buka WhatsApp — pakai location.href biar work di iOS Safari
+      // (window.open diblokir di iOS setelah async operation)
+      window.location.href = link;
     } catch (error: unknown) {
       console.error("Order submission error:", error);
       const message =
