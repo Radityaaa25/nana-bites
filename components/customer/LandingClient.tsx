@@ -223,7 +223,7 @@ export default function LandingClient({
         <motion.div
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
+          className="absolute bottom-5 md:bottom-20 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
           <span className="text-xs font-medium text-pink-400">scroll</span>
           <div className="w-0.5 h-6 bg-gradient-to-b from-pink-300 to-transparent rounded-full" />
         </motion.div>
@@ -351,7 +351,7 @@ export default function LandingClient({
             {/* Middle: Socials */}
             <div className="flex items-center">
               <a
-                href="https://instagram.com/na_nyemill"
+                href="https://instagram.com/na_bitess"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 px-6 py-3 rounded-full border border-pink-100 bg-pink-50/50 hover:bg-pink-100/70 hover:border-pink-200 hover:shadow-sm transition-all duration-300 group">
@@ -371,7 +371,7 @@ export default function LandingClient({
                   </svg>
                 </div>
                 <span className="text-sm font-bold text-pink-600 -ml-3 group-hover:text-pink-700">
-                  @nanabites
+                  @na_bitess
                 </span>
               </a>
             </div>
