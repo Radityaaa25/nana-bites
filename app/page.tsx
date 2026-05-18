@@ -2,6 +2,8 @@ import LandingClient from "@/components/customer/LandingClient";
 
 import { supabase } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 async function getMenu() {
   try {
     const { data } = await supabase
