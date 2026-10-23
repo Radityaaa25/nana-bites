@@ -19,6 +19,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
+  Download,
   ImagePlus,
   Loader2,
   MessageCircle,
@@ -430,6 +431,24 @@ export default function QrisPaymentPanel({
     }
   };
 
+  const handleDownloadQris = async () => {
+    try {
+      const response = await fetch(QRIS_IMAGE);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `QRIS-${QRIS_MERCHANT}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("QRIS berhasil diunduh!");
+    } catch (error) {
+      toast.error("Gagal mengunduh QRIS");
+    }
+  };
+
   return (
     <div className="mt-6 space-y-5">
       {!isPaid && (
@@ -488,6 +507,14 @@ export default function QrisPaymentPanel({
           <p className="text-sm font-bold text-pink-900">{QRIS_MERCHANT}</p>
           <p className="text-[11px] text-pink-400">NMID: {QRIS_NMID}</p>
         </div>
+        <button
+          type="button"
+          onClick={handleDownloadQris}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border-2 border-pink-200 bg-white py-2.5 text-sm font-bold text-pink-600 transition-all hover:border-pink-300 hover:bg-pink-50 active:scale-95"
+        >
+          <Download className="h-4 w-4" />
+          Unduh QRIS
+        </button>
         <div className="mt-4 rounded-xl bg-pink-50 p-3 text-xs leading-relaxed text-pink-700">
           <p className="font-bold mb-1">Cara bayar:</p>
           <ol className="list-inside list-decimal space-y-1">
