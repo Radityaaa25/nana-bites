@@ -414,7 +414,7 @@ export default function OrderModal({
                                   ? "text-pink-900"
                                   : "text-gray-600"
                               }`}>
-                              📱 QRIS (DANA)
+                              🔲 QRIS
                             </span>
                             <p className="text-[11px] text-gray-400">
                               Scan, bayar, lalu upload bukti
