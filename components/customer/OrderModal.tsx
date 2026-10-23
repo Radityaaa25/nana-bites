@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/lib/store";
 import { useCustomerOrderStore } from "@/lib/customerOrderStore";
 import { formatRupiah, generateWaLink } from "@/lib/utils";
-import { X, CheckCircle2, ChevronLeft } from "lucide-react";
+import { X, CheckCircle2, ChevronLeft, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -530,11 +530,16 @@ export default function OrderModal({
                   onClick={handleSubmit}
                   disabled={isLoading}
                   className="w-full rounded-full bg-green-500 py-3 font-bold text-white shadow-lg transition-all hover:bg-green-600 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                  {isLoading
-                    ? "Memproses..."
-                    : paymentMethod === "qris"
-                      ? "Buat Pesanan & Bayar QRIS 📱"
-                      : "Konfirmasi & Chat WhatsApp 💬"}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Memproses pesanan...</span>
+                    </>
+                  ) : paymentMethod === "qris" ? (
+                    "Buat Pesanan & Bayar QRIS 📱"
+                  ) : (
+                    "Konfirmasi & Chat WhatsApp 💬"
+                  )}
                 </button>
               ) : (
                 <button

@@ -100,6 +100,7 @@ export default function QrisPaymentPanel({
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [paymentStatus, setPaymentStatus] =
     useState<PaymentStatus>(initialPaymentStatus);
   const [proofUrl, setProofUrl] = useState<string | null>(initialProofUrl);
@@ -394,6 +395,7 @@ export default function QrisPaymentPanel({
   };
 
   const handleDownloadQris = async () => {
+    setIsDownloading(true);
     try {
       const response = await fetch(QRIS_IMAGE);
       const blob = await response.blob();
@@ -408,6 +410,8 @@ export default function QrisPaymentPanel({
       toast.success("QRIS berhasil diunduh!");
     } catch (error) {
       toast.error("Gagal mengunduh QRIS");
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -472,10 +476,20 @@ export default function QrisPaymentPanel({
         <button
           type="button"
           onClick={handleDownloadQris}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border-2 border-pink-200 bg-white py-2.5 text-sm font-bold text-pink-600 transition-all hover:border-pink-300 hover:bg-pink-50 active:scale-95"
+          disabled={isDownloading}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border-2 border-pink-200 bg-white py-2.5 text-sm font-bold text-pink-600 transition-all hover:border-pink-300 hover:bg-pink-50 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <Download className="h-4 w-4" />
-          Unduh QRIS
+          {isDownloading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Mengunduh...
+            </>
+          ) : (
+            <>
+              <Download className="h-4 w-4" />
+              Unduh QRIS
+            </>
+          )}
         </button>
         <div className="mt-4 rounded-xl bg-pink-50 p-3 text-xs leading-relaxed text-pink-700">
           <p className="font-bold mb-1">Cara bayar:</p>
