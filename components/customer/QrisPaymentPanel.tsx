@@ -375,56 +375,18 @@ export default function QrisPaymentPanel({
 
     setIsSharing(true);
     try {
-      let file = proofFileRef.current;
-
-      if (!file) {
-        const response = await fetch(proofPath, { cache: "no-store" });
-        if (!response.ok) throw new Error("Gagal mengambil gambar bukti");
-
-        const blob = await response.blob();
-        const extension = blob.type.includes("png")
-          ? "png"
-          : blob.type.includes("webp")
-            ? "webp"
-            : "jpg";
-        file = new File([blob], `bukti-${order.id}.${extension}`, {
-          type: blob.type || "image/jpeg",
-        });
-        proofFileRef.current = file;
-      }
-
-      if (
-        typeof navigator !== "undefined" &&
-        navigator.canShare?.({ files: [file] })
-      ) {
-        try {
-          await navigator.share({
-            files: [file],
-            text: buildWhatsAppText(),
-            title: `Bukti pembayaran #${order.id}`,
-          });
-          updateLocalOrder(paymentStatus);
-          return;
-        } catch (error) {
-          if (error instanceof Error && error.name === "AbortError") return;
-        }
-      }
-
+      // Langsung buka WhatsApp dengan link bukti
       if (!openWhatsAppWithLink()) {
         toast.error("Nomor WhatsApp admin belum dikonfigurasi");
         return;
       }
       updateLocalOrder(paymentStatus);
+      toast.success("Membuka WhatsApp...");
     } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") return;
-      if (openWhatsAppWithLink()) {
-        updateLocalOrder(paymentStatus);
-        return;
-      }
       toast.error(
         error instanceof Error
           ? error.message
-          : "Gagal membagikan bukti pembayaran",
+          : "Gagal membuka WhatsApp",
       );
     } finally {
       setIsSharing(false);
@@ -683,9 +645,9 @@ export default function QrisPaymentPanel({
 
               <div className="rounded-2xl border border-green-200 bg-green-50/60 p-4">
                 <p className="text-xs leading-relaxed text-green-800">
-                  Kirim konfirmasi ke WhatsApp admin sekarang. Gambar bukti
-                  akan ikut terlampir otomatis. Kalau perangkat belum
-                  mendukung, link bukti pendek akan disertakan di pesan.
+                  Kirim konfirmasi ke WhatsApp admin sekarang. Link bukti
+                  pembayaran akan disertakan dalam pesan, sehingga admin bisa
+                  langsung membuka dan mengecek bukti kamu.
                 </p>
                 {waNumber ? (
                   <button
