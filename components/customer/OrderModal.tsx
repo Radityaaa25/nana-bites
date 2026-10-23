@@ -4,12 +4,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/lib/store";
 import { useCustomerOrderStore } from "@/lib/customerOrderStore";
 import { formatRupiah, generateWaLink } from "@/lib/utils";
-import { X, CheckCircle2, ChevronLeft, Loader2 } from "lucide-react";
+import { X, CheckCircle2, ChevronLeft, Loader2, Banknote, Package, Truck, MessageCircle, QrCode } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 type PaymentMethod = "cash" | "qris";
+
+// QRIS Logo Component
+const QrisIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M3 3h7v7H3V3zm1 1v5h5V4H4zm1 1h3v3H5V5zm6-2h7v7h-7V3zm1 1v5h5V4h-5zm1 1h3v3h-3V5zM3 11h7v7H3v-7zm1 1v5h5v-5H4zm1 1h3v3H5v-3zm8-2h1v1h-1v-1zm2 0h1v1h-1v-1zm-2 2h1v1h-1v-1zm2 0h1v1h-1v-1zm2-2h1v3h-1v-3zm2 0h1v1h-1v-1zm-2 2h1v1h-1v-1zm2 0h1v3h-1v-3zm-4 2h3v1h-3v-1zm5 0h1v1h-1v-1zm-5 1h1v1h-1v-1zm2 0h3v1h-3v-1z"/>
+  </svg>
+);
 
 export default function OrderModal({
   isOpen,
@@ -383,7 +390,8 @@ export default function OrderModal({
                                 ? "text-pink-900"
                                 : "text-gray-600"
                             }`}>
-                            💵 Cash (Bayar di tempat)
+                            <Banknote className="inline-block w-4 h-4 mr-1 -mt-0.5" />
+                            Cash (Bayar di tempat)
                           </span>
                         </div>
                         {paymentMethod === "cash" && (
@@ -414,7 +422,8 @@ export default function OrderModal({
                                   ? "text-pink-900"
                                   : "text-gray-600"
                               }`}>
-                              🔲 QRIS
+                              <QrisIcon className="inline-block w-4 h-4 mr-1 -mt-0.5" />
+                              QRIS
                             </span>
                             <p className="text-[11px] text-gray-400">
                               Scan, bayar, lalu upload bukti
@@ -430,7 +439,8 @@ export default function OrderModal({
                         <div className="flex items-center gap-3">
                           <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
                           <span className="font-medium text-gray-500">
-                            🏦 Transfer Bank
+                            <Banknote className="inline-block w-4 h-4 mr-1 -mt-0.5" />
+                            Transfer Bank
                           </span>
                         </div>
                         <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-md font-bold">
@@ -458,7 +468,8 @@ export default function OrderModal({
                         <div className="flex items-center gap-3">
                           <div className="w-5 h-5 rounded-full border-4 border-pink-500 bg-white" />
                           <span className="font-medium text-pink-900">
-                            🎒 Ambil Sendiri (Sekolah)
+                            <Package className="inline-block w-4 h-4 mr-1 -mt-0.5" />
+                            Ambil Sendiri (Sekolah)
                           </span>
                         </div>
                         <CheckCircle2 className="text-pink-500 w-5 h-5" />
@@ -468,7 +479,8 @@ export default function OrderModal({
                         <div className="flex items-center gap-3">
                           <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
                           <span className="font-medium text-gray-500">
-                            🛵 Delivery
+                            <Truck className="inline-block w-4 h-4 mr-1 -mt-0.5" />
+                            Delivery
                           </span>
                         </div>
                         <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-md font-bold">
@@ -536,9 +548,15 @@ export default function OrderModal({
                       <span>Memproses pesanan...</span>
                     </>
                   ) : paymentMethod === "qris" ? (
-                    "Buat Pesanan & Bayar QRIS 📱"
+                    <>
+                      <QrCode className="w-5 h-5" />
+                      <span>Buat Pesanan & Bayar QRIS</span>
+                    </>
                   ) : (
-                    "Konfirmasi & Chat WhatsApp 💬"
+                    <>
+                      <MessageCircle className="w-5 h-5" />
+                      <span>Konfirmasi & Chat WhatsApp</span>
+                    </>
                   )}
                 </button>
               ) : (
