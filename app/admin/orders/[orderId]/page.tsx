@@ -1,6 +1,9 @@
 import OrderDetailClient from "@/components/admin/OrderDetailClient";
 import { notFound } from "next/navigation";
-import { createAdminSupabase } from "@/lib/supabase-admin";
+import {
+  createAdminSupabase,
+  createPaymentProofSignedUrl,
+} from "@/lib/supabase-admin";
 
 async function getOrder(id: string) {
   try {
@@ -24,6 +27,10 @@ async function getOrder(id: string) {
       items = legacyItems ?? [];
     }
 
+    const paymentProofUrl = await createPaymentProofSignedUrl(
+      order.payment_proof_path,
+    );
+
     return {
       id: order.id,
       customerName: order.customer_name,
@@ -34,6 +41,13 @@ async function getOrder(id: string) {
       notes: order.notes ?? "",
       status: order.status,
       createdAt: order.created_at,
+      paymentStatus: order.payment_status ?? "unpaid",
+      paymentProofUrl,
+      paymentAiResult: order.payment_ai_result ?? null,
+      paymentReviewNote: order.payment_review_note ?? null,
+      paymentUploadedAt: order.payment_uploaded_at ?? null,
+      paymentApprovedAt: order.payment_approved_at ?? null,
+      paymentUploadCount: order.payment_upload_count ?? 0,
       items: items.map((i: { menuId?: string | null; menu_id?: string | null; name: string; price: number; quantity: number }) => ({
         menuId: i.menuId ?? i.menu_id ?? null,
         name: i.name,

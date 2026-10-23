@@ -25,6 +25,7 @@ async function getOrders() {
       deliveryMethod: o.delivery_method,
       notes: o.notes ?? '',
       status: o.status,
+      paymentStatus: o.payment_status ?? 'unpaid',
       createdAt: o.created_at,
       items: Array.isArray(o.items) ? o.items : [],
     }))

@@ -1,4 +1,9 @@
-import { createAdminSupabase, verifyAdminSession } from '@/lib/supabase-admin'
+import {
+  createAdminSupabase,
+  createPaymentProofSignedUrl,
+  removePaymentProof,
+  verifyAdminSession,
+} from '@/lib/supabase-admin'
 import { NextRequest } from 'next/server'
 
 export async function PUT(
@@ -52,12 +57,23 @@ export async function DELETE(
 
     const { id } = await params
     const supabase = createAdminSupabase()
+    const { data: order } = await supabase
+      .from('orders')
+      .select('payment_proof_path')
+      .eq('id', id)
+      .single()
+
     const { error } = await supabase
       .from('orders')
       .delete()
       .eq('id', id)
 
     if (error) throw error
+
+    if (order?.payment_proof_path) {
+      await removePaymentProof(order.payment_proof_path)
+    }
+
     return Response.json({ success: true })
   } catch (error) {
     console.error('DELETE order error:', error)
@@ -87,6 +103,10 @@ export async function GET(
       ? order.items
       : []
 
+    const paymentProofUrl = await createPaymentProofSignedUrl(
+      order.payment_proof_path,
+    )
+
     return Response.json({
       id: order.id,
       customerName: order.customer_name,
@@ -97,6 +117,13 @@ export async function GET(
       notes: order.notes ?? '',
       status: order.status,
       createdAt: order.created_at,
+      paymentStatus: order.payment_status ?? 'unpaid',
+      paymentProofUrl,
+      paymentAiResult: order.payment_ai_result ?? null,
+      paymentUploadedAt: order.payment_uploaded_at ?? null,
+      paymentApprovedAt: order.payment_approved_at ?? null,
+      paymentReviewNote: order.payment_review_note ?? null,
+      paymentUploadCount: order.payment_upload_count ?? 0,
       items: items.map((i: { menuId?: string | null; menu_id?: string | null; name: string; price: number; quantity: number }) => ({
         menuId: i.menuId ?? i.menu_id ?? null,
         name: i.name,

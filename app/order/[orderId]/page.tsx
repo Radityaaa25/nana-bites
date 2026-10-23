@@ -1,15 +1,72 @@
 import { formatRupiah, formatDate } from "@/lib/utils";
+import {
+  PAYMENT_MAX_UPLOADS,
+  type PaymentAiResult,
+  type PaymentStatus,
+} from "@/lib/payment";
+import {
+  createAdminSupabase,
+  createPaymentProofSignedUrl,
+} from "@/lib/supabase-admin";
+import QrisPaymentPanel from "@/components/customer/QrisPaymentPanel";
+import OrderSync from "@/components/customer/OrderSync";
+import type { LocalOrder } from "@/lib/customerOrderStore";
 import Link from "next/link";
-import { CheckCircle2, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  ShieldAlert,
+} from "lucide-react";
 
 async function getOrder(id: string) {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/orders/${id}`,
-      { cache: "no-store" },
+    const supabase = createAdminSupabase();
+    const { data: order, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error || !order) return null;
+
+    const paymentProofUrl = await createPaymentProofSignedUrl(
+      order.payment_proof_path,
     );
-    if (!res.ok) return null;
-    return res.json();
+
+    const items = Array.isArray(order.items) ? order.items : [];
+
+    return {
+      id: order.id,
+      customerName: order.customer_name,
+      customerPhone: order.customer_phone,
+      totalPrice: order.total_price,
+      paymentMethod: order.payment_method,
+      deliveryMethod: order.delivery_method,
+      notes: order.notes ?? "",
+      status: order.status,
+      createdAt: order.created_at,
+      paymentStatus: order.payment_status ?? "unpaid",
+      paymentProofUrl,
+      paymentAiResult: order.payment_ai_result ?? null,
+      paymentReviewNote: order.payment_review_note ?? null,
+      paymentUploadCount: order.payment_upload_count ?? 0,
+      items: items.map(
+        (item: {
+          menuId?: string | null;
+          menu_id?: string | null;
+          name: string;
+          price: number;
+          quantity: number;
+        }) => ({
+          menuId: item.menuId ?? item.menu_id ?? null,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        }),
+      ),
+    };
   } catch (error) {
     console.error("Error fetching order:", error);
     return null;
@@ -32,7 +89,32 @@ export default async function OrderPage({
     order = null;
   }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (
+    status: string,
+    paymentStatus?: PaymentStatus,
+    isQrisOrder?: boolean,
+  ) => {
+    if (status === "pending" && isQrisOrder && paymentStatus === "unpaid") {
+      return (
+        <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+          <Clock className="w-3 h-3" /> Menunggu Bayar
+        </span>
+      );
+    }
+    if (status === "pending" && isQrisOrder && paymentStatus === "review") {
+      return (
+        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+          <ShieldAlert className="w-3 h-3" /> Cek Bukti
+        </span>
+      );
+    }
+    if (status === "pending" && isQrisOrder && paymentStatus === "rejected") {
+      return (
+        <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+          <AlertCircle className="w-3 h-3" /> Bukti Ditolak
+        </span>
+      );
+    }
     switch (status) {
       case "pending":
         return (
@@ -127,24 +209,83 @@ export default async function OrderPage({
     status: OrderStatus;
     createdAt: string;
     items: OrderItemRow[];
+    paymentStatus?: PaymentStatus;
+    paymentProofUrl?: string | null;
+    paymentAiResult?: PaymentAiResult | null;
+    paymentReviewNote?: string | null;
+    paymentUploadCount?: number;
+  };
+
+  const isQris = order.paymentMethod.toLowerCase() === "qris";
+  const paymentStatus = order.paymentStatus ?? "unpaid";
+  const isPaid = paymentStatus === "paid";
+  const waNumber =
+    process.env.NEXT_PUBLIC_WA_NUMBER || process.env.WA_NUMBER || "";
+  const localOrder: LocalOrder = {
+    id: order.id,
+    createdAt: order.createdAt,
+    totalPrice: order.totalPrice,
+    paymentMethod: order.paymentMethod,
+    paymentStatus,
+    orderStatus: order.status,
+    items: order.items.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+    })),
   };
 
   return (
     <div className="min-h-screen bg-pink-50/30 flex items-center justify-center p-4">
+      <OrderSync order={localOrder} />
       <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden">
         <div className="bg-pink-50 p-8 text-center border-b border-pink-100">
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-            <CheckCircle2 className="w-8 h-8 text-pink-500" />
+            {isQris && !isPaid ? (
+              <Clock className="w-8 h-8 text-amber-500" />
+            ) : (
+              <CheckCircle2 className="w-8 h-8 text-pink-500" />
+            )}
           </div>
           <h1 className="font-playfair text-2xl font-bold text-pink-900 mb-2">
-            Yay! Pesanan Berhasil 🎉
+            {isQris && !isPaid
+              ? "Selesaikan Pembayaran"
+              : "Yay! Pesanan Berhasil 🎉"}
           </h1>
           <p className="text-pink-600 text-sm">
-            Terima kasih kak {order.customerName}!
+            {isQris && !isPaid
+              ? `Kak ${order.customerName}, bayar pesanan #${order.id} lewat QRIS ya.`
+              : `Terima kasih kak ${order.customerName}!`}
           </p>
         </div>
 
         <div className="p-6">
+          {isQris && (
+            <QrisPaymentPanel
+              order={{
+                id: order.id,
+                totalPrice: order.totalPrice,
+                customerName: order.customerName,
+                createdAt: order.createdAt,
+                orderStatus: order.status,
+                items: order.items.map((item) => ({
+                  name: item.name,
+                  quantity: item.quantity,
+                })),
+              }}
+              initialPaymentStatus={paymentStatus}
+              initialProofUrl={
+                order.paymentProofUrl
+                  ? `/api/orders/${order.id}/payment-proof`
+                  : null
+              }
+              initialAnalysis={order.paymentAiResult ?? null}
+              initialReviewNote={order.paymentReviewNote ?? null}
+              initialUploadCount={order.paymentUploadCount ?? 0}
+              waNumber={waNumber}
+              maxUploads={PAYMENT_MAX_UPLOADS}
+            />
+          )}
+
           <div className="flex justify-between items-center mb-6 bg-pink-50/50 p-4 rounded-xl border border-pink-100">
             <div>
               <p className="text-xs text-pink-500 font-medium mb-1">
@@ -152,7 +293,7 @@ export default async function OrderPage({
               </p>
               <p className="font-bold text-pink-900">{order.id}</p>
             </div>
-            {getStatusBadge(order.status)}
+            {getStatusBadge(order.status, paymentStatus, isQris)}
           </div>
 
           <div className="space-y-4 mb-6">
@@ -190,6 +331,14 @@ export default async function OrderPage({
                 {order.paymentMethod}
               </span>
             </div>
+            {isQris && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">Status Bayar</span>
+                <span className="font-medium text-gray-800 uppercase">
+                  {paymentStatus}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-gray-500">Pengiriman</span>
               <span className="font-medium text-gray-800 uppercase">
@@ -198,7 +347,7 @@ export default async function OrderPage({
             </div>
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="mt-6 flex flex-col gap-3">
             <a
               href={`https://wa.me/${process.env.NEXT_PUBLIC_WA_NUMBER}?text=Halo%20kak%2C%20mau%20tanya%20pesanan%20${order.id}`}
               target="_blank"

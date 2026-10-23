@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatRupiah, formatDate } from "@/lib/utils";
+import type { PaymentAiResult, PaymentStatus } from "@/lib/payment";
 
 import {
   ArrowLeft,
@@ -10,12 +11,17 @@ import {
   Truck,
   Phone,
   CheckCircle2,
+  ExternalLink,
+  ImageIcon,
+  ShieldAlert,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 
-import ConfirmationModal from "./ConfirmationModal";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
 
 type OrderStatus = "pending" | "processing" | "completed";
 
@@ -37,10 +43,24 @@ type OrderRow = {
   status: OrderStatus;
   createdAt: string;
   items: OrderItemRow[];
+  paymentStatus?: PaymentStatus;
+  paymentProofUrl?: string | null;
+  paymentAiResult?: PaymentAiResult | null;
+  paymentReviewNote?: string | null;
+  paymentUploadedAt?: string | null;
+  paymentApprovedAt?: string | null;
+  paymentUploadCount?: number;
 };
 
 export default function OrderDetailClient({ order }: { order: OrderRow }) {
   const [status, setStatus] = useState(order.status);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(
+    order.paymentStatus ?? "unpaid",
+  );
+  const [paymentNote, setPaymentNote] = useState(
+    order.paymentReviewNote ?? "",
+  );
+  const [isUpdatingPayment, setIsUpdatingPayment] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -60,7 +80,7 @@ export default function OrderDetailClient({ order }: { order: OrderRow }) {
       setStatus(newStatus);
       toast.success("Status pesanan berhasil diupdate!");
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error("Gagal mengubah status");
     } finally {
       setIsLoading(false);
@@ -76,10 +96,42 @@ export default function OrderDetailClient({ order }: { order: OrderRow }) {
       toast.success("Pesanan berhasil dihapus!");
       router.push("/admin/orders");
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error("Gagal menghapus pesanan");
       setIsDeleting(false);
       setIsDeleteModalOpen(false);
+    }
+  };
+
+  const handlePaymentAction = async (action: "approve" | "reject") => {
+    setIsUpdatingPayment(true);
+    try {
+      const res = await fetch(`/api/orders/${order.id}/payment`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, note: paymentNote.trim() || undefined }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Gagal mengubah status pembayaran");
+      }
+
+      setPaymentStatus(action === "approve" ? "paid" : "rejected");
+      toast.success(
+        action === "approve"
+          ? "Pembayaran dikonfirmasi lunas!"
+          : "Bukti pembayaran ditolak.",
+      );
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Gagal mengubah status pembayaran",
+      );
+    } finally {
+      setIsUpdatingPayment(false);
     }
   };
 
@@ -275,6 +327,103 @@ export default function OrderDetailClient({ order }: { order: OrderRow }) {
             </div>
           </div>
 
+          {order.paymentMethod.toLowerCase() === "qris" && (
+            <div className="bg-white rounded-3xl shadow-sm border border-pink-100 p-6">
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <h2 className="font-bold text-pink-900">Pembayaran QRIS</h2>
+                <PaymentBadge status={paymentStatus} />
+              </div>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between py-2 border-b border-pink-50">
+                  <span className="text-gray-500">Upload ke</span>
+                  <span className="font-medium">
+                    {order.paymentUploadCount ?? 0}x
+                  </span>
+                </div>
+                {order.paymentUploadedAt && (
+                  <div className="flex justify-between py-2 border-b border-pink-50">
+                    <span className="text-gray-500">Waktu Upload</span>
+                    <span className="font-medium">
+                      {formatDate(order.paymentUploadedAt)}
+                    </span>
+                  </div>
+                )}
+                {order.paymentApprovedAt && (
+                  <div className="flex justify-between py-2 border-b border-pink-50">
+                    <span className="text-gray-500">Dikonfirmasi</span>
+                    <span className="font-medium">
+                      {formatDate(order.paymentApprovedAt)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {order.paymentProofUrl ? (
+                <a
+                  href={order.paymentProofUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 block overflow-hidden rounded-xl border border-pink-100 bg-pink-50"
+                  title="Buka bukti pembayaran">
+                  <Image
+                    src={order.paymentProofUrl}
+                    alt={`Bukti pembayaran ${order.id}`}
+                    width={500}
+                    height={650}
+                    unoptimized
+                    className="h-auto max-h-80 w-full object-contain"
+                  />
+                  <span className="flex items-center justify-center gap-1 py-2 text-xs font-bold text-pink-600">
+                    <ExternalLink className="h-3 w-3" /> Buka ukuran penuh
+                  </span>
+                </a>
+              ) : (
+                <div className="mt-4 flex items-center gap-2 rounded-xl border border-dashed border-pink-200 bg-pink-50/50 p-4 text-sm text-pink-500">
+                  <ImageIcon className="h-4 w-4" />
+                  Belum ada bukti pembayaran.
+                </div>
+              )}
+
+              {order.paymentAiResult && (
+                <AiPaymentResult result={order.paymentAiResult} />
+              )}
+
+              <div className="mt-4">
+                <label className="mb-1 block text-xs font-bold text-gray-500">
+                  Catatan untuk pembeli (opsional)
+                </label>
+                <textarea
+                  value={paymentNote}
+                  onChange={(event) => setPaymentNote(event.target.value)}
+                  placeholder="Contoh: Nominal kurang Rp2.000, mohon dicek lagi."
+                  className="min-h-[70px] w-full rounded-xl border border-pink-100 bg-pink-50/30 px-3 py-2 text-sm outline-none focus:border-pink-400"
+                />
+              </div>
+
+              {paymentStatus !== "paid" ? (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handlePaymentAction("reject")}
+                    disabled={isUpdatingPayment}
+                    className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-2.5 text-sm font-bold text-red-600 transition-colors hover:bg-red-100 disabled:opacity-60">
+                    <XCircle className="h-4 w-4" /> Tolak
+                  </button>
+                  <button
+                    onClick={() => handlePaymentAction("approve")}
+                    disabled={isUpdatingPayment || !order.paymentProofUrl}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-green-500 py-2.5 text-sm font-bold text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-60">
+                    <CheckCircle2 className="h-4 w-4" /> Lunas
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-3 flex items-center gap-2 rounded-xl bg-green-50 p-3 text-sm font-bold text-green-700">
+                  <CheckCircle2 className="h-4 w-4" /> Pembayaran sudah lunas
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="pt-4">
             <button
               onClick={() => setIsDeleteModalOpen(true)}
@@ -293,6 +442,117 @@ export default function OrderDetailClient({ order }: { order: OrderRow }) {
         title="Hapus Pesanan"
         message={`Yakin mau hapus pesanan #${order.id}? Data yang dihapus tidak bisa dikembalikan lho kak. 🥺`}
       />
+    </div>
+  );
+}
+
+function PaymentBadge({ status }: { status: PaymentStatus }) {
+  const map: Record<
+    PaymentStatus,
+    { label: string; className: string; icon: typeof Clock }
+  > = {
+    unpaid: {
+      label: "Belum Bayar",
+      className: "bg-amber-100 text-amber-800",
+      icon: Clock,
+    },
+    review: {
+      label: "Cek Bukti",
+      className: "bg-blue-100 text-blue-800",
+      icon: ShieldAlert,
+    },
+    paid: {
+      label: "Lunas",
+      className: "bg-green-100 text-green-800",
+      icon: CheckCircle,
+    },
+    rejected: {
+      label: "Ditolak",
+      className: "bg-red-100 text-red-800",
+      icon: XCircle,
+    },
+  };
+
+  const item = map[status];
+  const Icon = item.icon;
+
+  return (
+    <span
+      className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${item.className}`}>
+      <Icon className="h-3 w-3" /> {item.label}
+    </span>
+  );
+}
+
+function AiPaymentResult({ result }: { result: PaymentAiResult }) {
+  const verdictClass =
+    result.verdict === "valid"
+      ? "border-green-200 bg-green-50 text-green-800"
+      : result.verdict === "suspicious"
+        ? "border-amber-200 bg-amber-50 text-amber-800"
+        : "border-red-200 bg-red-50 text-red-800";
+
+  return (
+    <div className={`mt-4 rounded-xl border p-3 text-xs ${verdictClass}`}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-bold uppercase tracking-wide">
+          Hasil Pemeriksaan:{" "}
+          {result.verdict === "valid"
+            ? "Sesuai"
+            : result.verdict === "suspicious"
+              ? "Perlu Dicek"
+              : "Tidak Sesuai"}
+        </p>
+        <span className="font-bold">
+          {Math.round(result.checks.confidence * 100)}%
+        </span>
+      </div>
+
+      <div className="mt-2 grid grid-cols-1 gap-1.5">
+        <p>
+          <span className="opacity-60">Nominal: </span>
+          <span className="font-bold">
+            {result.checks.nominal.detected === null
+              ? "Tidak terbaca"
+              : formatRupiah(result.checks.nominal.detected)}
+          </span>{" "}
+          {result.checks.nominal.match ? "(cocok)" : "(tidak cocok)"}
+        </p>
+        <p>
+          <span className="opacity-60">Merchant: </span>
+          <span className="font-bold">
+            {result.checks.recipient.detected || "Tidak terbaca"}
+          </span>
+        </p>
+        <p>
+          <span className="opacity-60">Waktu: </span>
+          <span className="font-bold">
+            {result.checks.time.detected || "Tidak terbaca"}
+          </span>
+        </p>
+        <p>
+          <span className="opacity-60">Pengirim: </span>
+          <span className="font-bold">
+            {result.extraction.detected_sender || "Tidak terbaca"}
+          </span>
+        </p>
+      </div>
+
+      {result.reasons.filter((reason) => !/\bAI\b/i.test(reason)).length >
+        0 && (
+        <ul className="mt-2 list-inside list-disc space-y-1">
+          {result.reasons
+            .filter((reason) => !/\bAI\b/i.test(reason))
+            .map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+        </ul>
+      )}
+
+      <p className="mt-2 opacity-70">
+        Pemeriksaan ini hanya pengecekan awal. Tetap cocokkan dengan mutasi
+        DANA sebelum konfirmasi lunas.
+      </p>
     </div>
   );
 }

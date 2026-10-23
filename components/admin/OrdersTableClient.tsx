@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatRupiah, formatDate } from "@/lib/utils";
+import type { PaymentStatus } from "@/lib/payment";
 import {
   Eye,
   Trash2,
@@ -16,7 +17,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as XLSX from "xlsx";
-import ConfirmationModal from "./ConfirmationModal";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
 
 type OrderStatus = "pending" | "processing" | "completed";
 
@@ -38,6 +39,7 @@ type OrderRow = {
   deliveryMethod: string;
   notes?: string;
   status: OrderStatus;
+  paymentStatus?: PaymentStatus;
   createdAt: string;
   items: OrderItem[];
 };
@@ -91,7 +93,7 @@ export default function OrdersTableClient({
       setIsDeleteModalOpen(false);
       setSelectedOrderId(null);
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error("Gagal menghapus pesanan");
     } finally {
       setIsDeleting(false);
@@ -167,6 +169,28 @@ export default function OrdersTableClient({
       `Laporan-NanaBites-${monthData.name.replace(" ", "-")}.xlsx`,
     );
     toast.success(`Berhasil ekspor laporan ${monthData.name}`);
+  };
+
+  const getPaymentBadge = (order: OrderRow) => {
+    if (order.paymentMethod?.toLowerCase() !== "qris") {
+      return <span className="text-xs text-gray-400">Cash</span>;
+    }
+
+    const status = order.paymentStatus ?? "unpaid";
+    const map: Record<PaymentStatus, { label: string; className: string }> = {
+      unpaid: { label: "Belum Bayar", className: "bg-amber-100 text-amber-800" },
+      review: { label: "Cek Bukti", className: "bg-blue-100 text-blue-800" },
+      paid: { label: "Lunas", className: "bg-green-100 text-green-800" },
+      rejected: { label: "Ditolak", className: "bg-red-100 text-red-800" },
+    };
+    const item = map[status];
+
+    return (
+      <span
+        className={`w-max rounded-full px-2.5 py-1 text-[10px] font-bold ${item.className}`}>
+        {item.label}
+      </span>
+    );
   };
 
   const getStatusBadge = (status: string) => {
@@ -257,6 +281,7 @@ export default function OrdersTableClient({
                     <th className="p-5">Total</th>
                     <th className="p-5">Waktu</th>
                     <th className="p-5">Status</th>
+                    <th className="p-5">Pembayaran</th>
                     <th className="p-5 text-right">Aksi</th>
                   </tr>
                 </thead>
@@ -283,6 +308,7 @@ export default function OrdersTableClient({
                         {formatDate(order.createdAt)}
                       </td>
                       <td className="p-5">{getStatusBadge(order.status)}</td>
+                      <td className="p-5">{getPaymentBadge(order)}</td>
                       <td className="p-5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Link
@@ -303,7 +329,7 @@ export default function OrdersTableClient({
                   ))}
                   {filteredOrders.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-20 text-center">
+                      <td colSpan={7} className="p-20 text-center">
                         <div className="flex flex-col items-center gap-3">
                           <span className="text-4xl opacity-50">🍱</span>
                           <p className="text-gray-400 font-medium">

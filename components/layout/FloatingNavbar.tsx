@@ -1,14 +1,16 @@
 "use client";
 
-import { ShoppingCart } from "lucide-react";
+import { ReceiptText, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCartStore } from "@/lib/store";
+import { useCustomerOrderStore } from "@/lib/customerOrderStore";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export default function FloatingNavbar() {
   const { getCartCount, toggleCart } = useCartStore();
+  const orderCount = useCustomerOrderStore((state) => state.orders.length);
   const cartCount = getCartCount();
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -59,18 +61,32 @@ export default function FloatingNavbar() {
         </a>
       </div>
 
-      <button
-        onClick={toggleCart}
-        className="relative flex items-center justify-center rounded-full bg-pink-100 p-2 text-pink-700 hover:bg-pink-200 transition-colors">
-        <ShoppingCart className="h-5 w-5" />
-        {mounted && cartCount > 0 && (
-          <span
-            key={cartCount}
-            className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white">
-            {cartCount}
-          </span>
-        )}
-      </button>
+      <div className="flex items-center gap-2">
+        <Link
+          href="/pesanan"
+          title="Pesanan Saya"
+          className="relative flex items-center justify-center rounded-full bg-pink-50 p-2 text-pink-700 hover:bg-pink-100 transition-colors">
+          <ReceiptText className="h-5 w-5" />
+          {mounted && orderCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-500 px-1 text-[10px] font-bold text-white">
+              {orderCount}
+            </span>
+          )}
+        </Link>
+
+        <button
+          onClick={toggleCart}
+          className="relative flex items-center justify-center rounded-full bg-pink-100 p-2 text-pink-700 hover:bg-pink-200 transition-colors">
+          <ShoppingCart className="h-5 w-5" />
+          {mounted && cartCount > 0 && (
+            <span
+              key={cartCount}
+              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white">
+              {cartCount}
+            </span>
+          )}
+        </button>
+      </div>
     </nav>
   );
 }

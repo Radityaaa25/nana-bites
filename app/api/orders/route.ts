@@ -1,5 +1,13 @@
 import { createAdminSupabase } from '@/lib/supabase-admin'
+import { randomBytes } from 'crypto'
 import { NextRequest } from 'next/server'
+
+function createOrderId() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  const bytes = randomBytes(8)
+  const suffix = Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join('')
+  return `NB-${suffix}`
+}
 
 function requireAdmin(request: NextRequest | Request): boolean {
   const cookieHeader = (request as Request).headers.get('cookie') || ''
@@ -69,6 +77,7 @@ export async function GET(request: Request) {
         deliveryMethod: rawOrder.delivery_method,
         notes: rawOrder.notes ?? '',
         status: rawOrder.status,
+        paymentStatus: rawOrder.payment_status ?? 'unpaid',
         createdAt: rawOrder.created_at,
         items: normalizeItems(Array.isArray(rawOrder.items) ? rawOrder.items : items),
       }
@@ -146,7 +155,12 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Total harga tidak valid' }, { status: 400 })
     }
 
-    const orderId = `NB-${Date.now()}`
+    const normalizedPaymentMethod = String(paymentMethod ?? 'cash').toLowerCase()
+    if (!['cash', 'qris'].includes(normalizedPaymentMethod)) {
+      return Response.json({ error: 'Metode pembayaran tidak valid' }, { status: 400 })
+    }
+
+    const orderId = createOrderId()
     const orderData = {
       id: orderId,
       customer_name: nameStr,
@@ -154,7 +168,8 @@ export async function POST(request: Request) {
       notes: notes ? String(notes).trim() : '',
       items: normalizeItems(items),
       total_price: totalPriceNum,
-      payment_method: paymentMethod ?? 'cash',
+      payment_method: normalizedPaymentMethod,
+      payment_status: 'unpaid',
       delivery_method: deliveryMethod ?? 'pickup',
       status: 'pending',
       created_at: new Date().toISOString(),

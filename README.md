@@ -7,6 +7,8 @@ Nana Bites adalah aplikasi web katalog menu dan pemesanan jajanan modern yang di
 - **🎨 Desain Premium**: Antarmuka modern dengan tipografi mewah (Cormorant Garamond & DM Sans) serta animasi halus menggunakan **Framer Motion**.
 - **📱 Responsive & Interactive**: Optimal di semua perangkat dengan fitur *Product Detail Modal* dan *Cart System*.
 - **🛍️ Alur Pesan WhatsApp**: Integrasi otomatis yang merangkum pesanan dan mengirimkannya langsung ke WhatsApp penjual.
+- **📱 Pembayaran QRIS**: Pembeli scan QRIS statis, upload bukti bayar, lalu sistem memeriksa nominal, merchant, dan waktu secara otomatis. Admin tetap melakukan approve manual.
+- **🧾 Riwayat Pesanan Lokal**: Riwayat pesanan tersimpan di localStorage browser tanpa perlu login.
 - **⚡ Real-time Menu Management**: Dashboard Admin lengkap untuk mengatur stok, harga, gambar, label (Best Seller/Coming Soon), dan status ketersediaan secara real-time.
 - **🗄️ Supabase Integration**: Database PostgreSQL yang handal untuk menyimpan data menu dan riwayat pesanan.
 
@@ -41,12 +43,34 @@ Nana Bites adalah aplikasi web katalog menu dan pemesanan jajanan modern yang di
    SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
    ADMIN_PASSWORD=your_admin_password
    NEXT_PUBLIC_WA_NUMBER=your_whatsapp_number (cth: 628xxx)
+
+   GROQ_API_KEY=your_groq_api_key
+   GROQ_VISION_MODEL=qwen/qwen3.8-27b
+   NEXT_PUBLIC_QRIS_IMAGE=/QRIS.jpeg
+   NEXT_PUBLIC_QRIS_MERCHANT=Nama Merchant QRIS
+   NEXT_PUBLIC_QRIS_NMID=NMID Merchant
+   PAYMENT_TIME_TOLERANCE_MINUTES=60
+   NEXT_PUBLIC_PAYMENT_DEADLINE_HOURS=24
+   PAYMENT_MAX_UPLOAD_MB=5
+   PAYMENT_MAX_UPLOADS=3
    ```
 
-4. **Jalankan Development Server**
+4. **Setup Database & Storage Pembayaran**
+   Jalankan `supabase/payment-setup.sql` di Supabase SQL Editor. File ini menambahkan kolom status pembayaran dan membuat bucket private `payment-proofs`.
+
+5. **Jalankan Development Server**
    ```bash
    npm run dev
    ```
+
+## 💳 Alur Pembayaran QRIS
+
+1. Pembeli memilih metode QRIS saat checkout.
+2. Pesanan dibuat dengan status pembayaran `unpaid`, lalu pembeli diarahkan ke halaman order.
+3. Pembeli scan QRIS statis, transfer sesuai nominal, dan upload bukti.
+4. Server menyimpan bukti ke Supabase Storage private, lalu memeriksa nominal, merchant, dan waktu secara otomatis.
+5. Hasil pemeriksaan hanya sebagai pengecekan awal. Admin harus membuka detail pesanan dan menekan tombol **Lunas** sebelum pembayaran dianggap sah.
+6. Riwayat pesanan pembeli tersimpan otomatis di localStorage browser dan bisa dilihat di halaman `/pesanan`.
 
 ## 📂 Struktur Proyek
 
